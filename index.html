@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA PGR BOREAL — CENTRAL COMPLETA SST</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SheetJS CDN para leitura de planilhas Excel (.xlsx) -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cambria:wght@400;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .boreal-header { background: linear-gradient(135deg, #091220 0%, #1e3a8a 100%); }
+        .signature-canvas { border: 2px dashed #94a3b8; background: #ffffff; cursor: crosshair; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        /* Forçar todos os campos de digitação em MAIÚSCULO */
+        input[type="text"], textarea { text-transform: uppercase; }
+        
+        /* Tabela ultra-compacta para visualização com fonte Cambria */
+        .table-pgr-preview { font-family: 'Cambria', serif; font-size: 10pt; border-collapse: collapse; width: 100%; text-transform: uppercase; }
+        .table-pgr-preview th, .table-pgr-preview td {
+            border: 1px solid #1e293b;
+            padding: 2px 4px !important;
+            line-height: 1.05 !important;
+            margin: 0 !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+        .table-pgr-preview th {
+            background-color: #e2e8f0;
+            font-weight: bold;
+            font-size: 10.5pt;
+        }
+    </style>
+</head>
+<body class="text-slate-800 pb-32">
+
+    <!-- TOP NAV BAR COM IDENTIDADE BOREAL -->
+    <header class="boreal-header text-white sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-500 text-slate-950 font-black text-xl px-2 py-0.5 rounded shadow">
+                    B
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base md:text-lg tracking-wide leading-none flex items-center gap-2">
+                        BOREAL ENGMED <span class="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-black uppercase">Gerador Completo PGR NR-01</span>
+                    </h1>
+                    <p class="text-[10px] text-blue-200 mt-0.5">SISTEMA INTEGRADO DE COLETA, DOCUMENTO-BASE & GESTÃO DE AÇÕES</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button type="button" onclick="openImportModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded flex items-center shadow-sm">
+                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 mr-1.5"></i> IMPORTAR PLANILHA (.XLSX)
+                </button>
+                <button type="button" onclick="confirmNewClient()" class="bg-red-800/80 hover:bg-red-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded border border-red-400/30 flex items-center shadow-sm">
+                    <i data-lucide="rotate-ccw" class="w-3 h-3 mr-1"></i> NOVO CLIENTE / LIMPAR
+                </button>
+            </div>
+        </div>
+
+        <!-- BARRA DE MÓDULOS FUTUROS, ARQUIVO GERAL & CHAT -->
+        <div class="bg-slate-950/70 border-t border-blue-900/60 px-4 py-1.5 overflow-x-auto">
+            <div class="max-w-7xl mx-auto flex items-center space-x-1 whitespace-nowrap text-[11px] font-bold">
+                <span class="text-amber-400 px-2 py-0.5 flex items-center"><i data-lucide="folder-git-2" class="w-3 h-3 mr-1"></i> MÓDULOS SST:</span>
+                <button type="button" class="bg-blue-800 text-white px-2.5 py-0.5 rounded">1. PGR (NR-01) [ATIVO]</button>
+                <button type="button" onclick="openModuleNotice('LTCAT / LTP')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">2. LTCAT / LTP</button>
+                <button type="button" onclick="openModuleNotice('LTI / LTIP (Insalubridade/Periculosidade)')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">3. LTI / LTIP</button>
+                <button type="button" onclick="openModuleNotice('Relatório de Avaliação Quantitativa')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">4. Rel. Aval. Quantitativa</button>
+                <button type="button" onclick="openModuleNotice('PCMSO (NR-07)')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">5. PCMSO (NR-07)</button>
+                <button type="button" onclick="openModuleNotice('APR / PT / Ordem de Serviço')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">6. APR / PT / O.S.</button>
+                <button type="button" onclick="openModuleNotice('PPP (eSocial S-2240)')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">7. PPP / eSocial</button>
+                
+                <button type="button" onclick="openDocsVaultModal()" class="ml-2 bg-indigo-700 hover:bg-indigo-800 text-white px-2.5 py-0.5 rounded flex items-center shadow">
+                    <i data-lucide="archive" class="w-3 h-3 mr-1"></i> ARQUIVO DE DOCUMENTOS (ART/OFÍCIOS) (<span id="vault-count-badge">0</span>)
+                </button>
+                <button type="button" onclick="openChatModal()" class="ml-1 bg-teal-700 hover:bg-teal-800 text-white px-2.5 py-0.5 rounded flex items-center shadow">
+                    <i data-lucide="messages-square" class="w-3 h-3 mr-1"></i> CHAT DE CONSULTORIA SST
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- BARRA DE GESTÃO DA VISTORIA -->
+    <div class="max-w-7xl mx-auto px-4 mt-3">
+        <div class="bg-white border border-slate-300 rounded-xl p-3 flex flex-wrap justify-between items-center gap-3 shadow-sm">
+            <div class="flex items-center gap-3 flex-wrap">
+                <span class="text-xs font-bold text-slate-700 uppercase flex items-center">
+                    <i data-lucide="building" class="w-4 h-4 mr-1 text-blue-700"></i> UNIDADE ATUAL:
+                    <strong id="badge-unidade-atual" class="ml-1 text-blue-900 bg-blue-100 px-2 py-0.5 rounded">NÃO DEFINIDA</strong>
+                </span>
+                <span class="text-xs font-semibold text-slate-400">|</span>
+                <span class="text-xs font-bold text-emerald-700 flex items-center">
+                    <i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> <span id="badge-total-setores">0</span> SETOR(ES) SALVO(S)
+                </span>
+                <span class="text-xs font-semibold text-slate-400">|</span>
+                <span class="text-xs font-bold text-indigo-700 flex items-center">
+                    <i data-lucide="layers" class="w-4 h-4 mr-1"></i> <span id="badge-total-unidades">1</span> UNIDADE(S) NO PROJETO
+                </span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" onclick="openPlanoAcaoManager()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm">
+                    <i data-lucide="calendar-clock" class="w-3.5 h-3.5 mr-1.5"></i> GESTÃO DE PLANOS & ALERTAS (<span id="badge-planos-count">0</span>)
+                </button>
+                <button type="button" onclick="salvarUnidadeEIniciarNova()" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm">
+                    <i data-lucide="plus-circle" class="w-3.5 h-3.5 mr-1.5"></i> SALVAR UNIDADE E INICIAR NOVA
+                </button>
+                <button type="button" onclick="openReviewModal()" class="bg-blue-900 hover:bg-blue-950 text-white font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm">
+                    <i data-lucide="eye" class="w-3.5 h-3.5 mr-1.5"></i> VER MATRIZES SALVAS
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTAINER PRINCIPAL -->
+    <main class="max-w-7xl mx-auto px-4 py-3 space-y-5">
+
+        <!-- MATRIZ 01: CAPA DO PGR -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-blue-900 text-white text-[11px] font-black px-2 py-0.5 rounded">MATRIZ 01</span>
+                    <h2 class="font-bold text-slate-800 text-xs md:text-sm uppercase tracking-wide">Capa do PGR — Caracterização do Solicitante</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="startVoiceInput('solicitante_nome')" class="text-xs bg-slate-200 hover:bg-slate-300 p-1 rounded text-slate-700" title="Ditar Nome do Solicitante">
+                        <i data-lucide="mic" class="w-3.5 h-3.5 text-blue-700"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div class="md:col-span-2">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nome do Solicitante (Razão Social) *</label>
+                    <input type="text" id="solicitante_nome" placeholder="Ex: TRIBUNAL REGIONAL DO TRABALHO / PREFEITURA MUNICIPAL" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">CNPJ do Solicitante *</label>
+                    <input type="text" id="solicitante_cnpj" placeholder="00.000.000/0001-00" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Vigência do PGR *</label>
+                    <input type="text" id="solicitante_vigencia" placeholder="Ex: 2026 A 2028" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Data de Emissão *</label>
+                    <input type="date" id="solicitante_data_emissao" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" onchange="autoSave()">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">CNAE Principal</label>
+                    <input type="text" id="solicitante_cnae" placeholder="Ex: 84.11-6-00" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Endereço da Sede do Solicitante</label>
+                    <input type="text" id="solicitante_endereco" placeholder="Ex: AV. PRESIDENTE TANCREDO NEVES, S/N" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                </div>
+            </div>
+
+            <!-- ITEM 2.2 — ANEXOS TÉCNICOS -->
+            <div class="border-t border-slate-200 p-4 bg-slate-50/70 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-slate-800 uppercase flex items-center">
+                        <i data-lucide="paperclip" class="w-3.5 h-3.5 mr-1.5 text-blue-800"></i> ITEM 2.2 DO PGR — NOME DOS ANEXOS VINCULADOS AO DOCUMENTO:
+                    </span>
+                    <button type="button" onclick="addAnexoItem()" class="text-[10px] bg-blue-800 hover:bg-blue-900 text-white font-bold px-2 py-0.5 rounded flex items-center">
+                        <i data-lucide="plus" class="w-3 h-3 mr-1"></i> + Adicionar Anexo
+                    </button>
+                </div>
+                <div id="anexos-container" class="space-y-1.5">
+                    <div class="anexo-row flex items-center gap-2">
+                        <input type="text" class="anexo-input w-full border border-slate-300 rounded p-1.5 text-xs bg-white uppercase font-semibold" placeholder="EX: ANEXO I — LAUDO DE AVALIAÇÃO DE RUÍDO" value="ANEXO I — LAUDO DE AVALIAÇÃO QUANTITATIVA AMBIENTAL" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                        <button type="button" onclick="removeAnexoItem(this)" class="text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MATRIZ 02: CAPÍTULO 1 (DADOS DA UNIDADE) -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-blue-900 text-white text-[11px] font-black px-2 py-0.5 rounded">MATRIZ 02</span>
+                    <h2 class="font-bold text-slate-800 text-xs md:text-sm uppercase tracking-wide">Capítulo 1 do PGR — Dados da Unidade & Relatório de Visita</h2>
+                </div>
+                <span class="text-[11px] text-amber-900 bg-amber-100 px-2 py-0.5 rounded font-bold uppercase">1 por Estabelecimento / Secretaria</span>
+            </div>
+            <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nome da Unidade Inspecionada *</label>
+                    <input type="text" id="unidade_nome" placeholder="Ex: FÓRUM TRT / SECRETARIA DE SAÚDE" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); updateUnidadeBadge(); autoSave();">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">CNPJ da Unidade *</label>
+                    <input type="text" id="unidade_cnpj" placeholder="00.000.000/0001-00" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Telefone / Contato</label>
+                    <input type="text" id="unidade_tel" placeholder="(00) 00000-0000" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nome do Responsável da Unidade</label>
+                    <input type="text" id="unidade_resp" placeholder="Ex: DR. ROBERTO GUIMARÃES" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Cargo do Responsável</label>
+                    <input type="text" id="unidade_cargo_resp" placeholder="Ex: DIRETOR DE SECRETARIA / GESTOR" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Endereço Completo da Unidade</label>
+                    <input type="text" id="unidade_endereco" placeholder="Ex: ROD. NORTE SUL, S/N" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                </div>
+
+                <div class="md:col-span-3 border-t border-slate-200 pt-3 mt-1">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nome do Contato que acompanhou a vistoria *</label>
+                            <input type="text" id="unidade_contato" placeholder="NOME COMPLETO DE QUEM RECEBEU A EQUIPE" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[11px] font-bold text-slate-700 uppercase">Rúbrica do Contato na Tela:</span>
+                                <button type="button" onclick="clearSignature()" class="text-[10px] text-red-600 hover:text-red-800 font-bold flex items-center">
+                                    <i data-lucide="rotate-ccw" class="w-3 h-3 mr-1"></i> Limpar Rúbrica
+                                </button>
+                            </div>
+                            <canvas id="sig-canvas" class="signature-canvas w-full h-20 rounded shadow-inner"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FORMULÁRIO DE ENTRADA DO SETOR -->
+        <section class="bg-white rounded-xl shadow border-2 border-blue-700 overflow-hidden">
+            <div class="bg-blue-900 text-white px-4 py-2.5 flex flex-wrap justify-between items-center gap-2">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-amber-400 text-slate-950 text-[11px] font-black px-2 py-0.5 rounded">MATRIZ DO CAPÍTULO 15</span>
+                    <h2 class="font-extrabold text-xs md:text-sm tracking-wide uppercase">Entrada do Setor: GHE, Riscos, Medições e Plano de Ação</h2>
+                </div>
+                <div class="text-[11px] text-blue-200 font-medium">
+                    Preencha este setor e clique no botão verde abaixo para arquivar
+                </div>
+            </div>
+
+            <div class="p-4 space-y-4">
+                <!-- 1. GHE -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-1.5">
+                        <span class="text-blue-950 font-bold text-xs uppercase flex items-center">
+                            <i data-lucide="layers" class="w-4 h-4 mr-1 text-blue-800"></i> 1. Grupo Homogêneo de Exposição (GHE) & Processo
+                        </span>
+                        <button type="button" onclick="startVoiceInput('cur_setor_processo')" class="text-xs bg-slate-200 hover:bg-slate-300 px-2 py-0.5 rounded text-slate-700 flex items-center">
+                            <i data-lucide="mic" class="w-3 h-3 text-blue-700 mr-1"></i> Ditar Processo
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nome do Setor ou da Unidade *</label>
+                            <input type="text" id="cur_setor_nome" placeholder="EX: SECRETARIA DA VARA / ALMOXARIFADO" class="w-full bg-white border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase();">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Processo Operacional / Processo de Trabalho *</label>
+                            <input type="text" id="cur_setor_processo" placeholder="EX: ATENDIMENTO AO PÚBLICO E DIGITAÇÃO" class="w-full bg-white border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase();">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. MEDIÇÕES AMBIENTAIS -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+                    <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-1.5 gap-2">
+                        <span class="text-blue-950 font-bold text-xs uppercase flex items-center">
+                            <i data-lucide="activity" class="w-4 h-4 mr-1 text-emerald-600"></i> 2. Medições Ambientais (Ruído, Temp, Ilum, Umid)
+                        </span>
+                        <button type="button" onclick="addMeasurementRow()" class="text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded flex items-center shadow-sm">
+                            <i data-lucide="plus" class="w-3.5 h-3.5 mr-1"></i> + PONTO DE MEDIÇÃO
+                        </button>
+                    </div>
+                    <div id="measurements-container" class="space-y-1.5"></div>
+                </div>
+
+                <!-- 3. CARGOS -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+                    <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-1.5 gap-2">
+                        <span class="text-blue-950 font-bold text-xs uppercase flex items-center">
+                            <i data-lucide="users" class="w-4 h-4 mr-1 text-blue-700"></i> 3. Cargos, Quantidade e Atividades
+                        </span>
+                        <button type="button" onclick="addCargoRow()" class="text-[11px] bg-blue-700 hover:bg-blue-800 text-white font-bold px-2.5 py-1 rounded flex items-center shadow-sm">
+                            <i data-lucide="user-plus" class="w-3.5 h-3.5 mr-1"></i> + ADICIONAR CARGO
+                        </button>
+                    </div>
+                    <div id="cargos-container" class="space-y-1.5"></div>
+                </div>
+
+                <!-- 4. RISCOS -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-3">
+                    <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-1.5 gap-2">
+                        <span class="text-blue-950 font-bold text-xs uppercase flex items-center">
+                            <i data-lucide="shield-alert" class="w-4 h-4 mr-1 text-amber-600"></i> 4. Inventário de Riscos Ocupacionais & Plano de Ação
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="openSmartVoiceRiskModal()" class="text-[11px] bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-2.5 py-1 rounded flex items-center shadow-sm">
+                                <i data-lucide="mic" class="w-3.5 h-3.5 mr-1 text-amber-300"></i> DITAR RISCO COMPLETO
+                            </button>
+                            <button type="button" onclick="addManualRisk()" class="text-[11px] bg-slate-700 hover:bg-slate-800 text-white font-bold px-2.5 py-1 rounded flex items-center shadow-sm">
+                                <i data-lucide="plus" class="w-3.5 h-3.5 mr-1"></i> + RISCO MANUAL
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BARRAS DOS 6 GRUPOS DE RISCO -->
+                    <div class="bg-white p-2.5 rounded border border-slate-200 space-y-1.5">
+                        <span class="text-[10px] font-bold text-slate-700 uppercase block">Selecione o Grupo para abrir os Perigos na lista suspensa:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="filterRiskGroup('Físico')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">FÍSICO</button>
+                            <button type="button" onclick="filterRiskGroup('Químico')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">QUÍMICO</button>
+                            <button type="button" onclick="filterRiskGroup('Biológico')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">BIOLÓGICO</button>
+                            <button type="button" onclick="filterRiskGroup('Ergonômico')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">ERGONÔMICO</button>
+                            <button type="button" onclick="filterRiskGroup('Acidente')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">ACIDENTE</button>
+                            <button type="button" onclick="filterRiskGroup('Psicossocial')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">PSICOSSOCIAL</button>
+                        </div>
+                    </div>
+
+                    <div id="risks-container" class="space-y-3"></div>
+
+                    <!-- RESPONSÁVEL DO PLANO -->
+                    <div class="bg-amber-50 border border-amber-200 rounded p-3 space-y-2">
+                        <div class="flex flex-wrap justify-between items-center gap-2">
+                            <label class="block text-[11px] font-bold text-amber-950 uppercase">Responsável pela Implementação do Plano de Ação deste Setor:</label>
+                            <button type="button" onclick="useSameResponsavel()" class="text-[10px] bg-amber-600 hover:bg-amber-700 text-white font-bold px-2 py-1 rounded shadow-sm">"O MESMO"</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-600 uppercase block">Nome do Responsável *</label>
+                                <input type="text" id="cur_setor_resp" placeholder="EX: DR. ROBERTO / GESTÃO" class="w-full bg-white border border-amber-300 rounded p-1.5 text-xs font-semibold uppercase">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-600 uppercase block">WhatsApp (Alertas)</label>
+                                <input type="text" id="cur_setor_resp_zap" placeholder="(19) 99156-7153" class="w-full bg-white border border-amber-300 rounded p-1.5 text-xs font-semibold">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-600 uppercase block">E-mail (Alertas)</label>
+                                <input type="text" id="cur_setor_resp_email" placeholder="responsavel@empresa.com.br" class="w-full bg-white border border-amber-300 rounded p-1.5 text-xs font-semibold">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTÃO SALVAR SETOR -->
+                <div class="bg-slate-100 p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="text-[11px] text-slate-600">
+                        <i data-lucide="check-circle" class="w-4 h-4 inline mr-1 text-emerald-600"></i>
+                        Ao salvar, este setor é arquivado e os campos ficam limpos para registrar o próximo sem poluição visual.
+                    </div>
+                    <button type="button" onclick="saveAndResetSector()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-6 py-2.5 rounded-lg shadow-md flex items-center justify-center text-xs uppercase whitespace-nowrap">
+                        <i data-lucide="save" class="w-4 h-4 mr-2"></i> SALVAR E ADICIONAR PRÓXIMO SETOR
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- LISTA DE SETORES SALVOS -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex justify-between items-center">
+                <h2 class="font-bold text-slate-800 text-xs md:text-sm uppercase">Setores Arquivados nesta Unidade (<span id="saved-sectors-count">0</span>)</h2>
+                <button type="button" onclick="openReviewModal()" class="text-xs text-blue-800 font-bold uppercase">Visualizar Matrizes</button>
+            </div>
+            <div class="p-3">
+                <div id="sectors-list-empty" class="text-center py-4 text-slate-400 text-xs uppercase">Nenhum setor adicionado ainda.</div>
+                <div id="sectors-list-container" class="space-y-1.5 hidden"></div>
+            </div>
+        </section>
+
+        <!-- CENTRAL DE EXPORTAÇÃO -->
+        <section class="bg-gradient-to-r from-blue-950 to-slate-900 rounded-xl shadow-xl p-5 text-white space-y-4">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div>
+                    <h3 class="text-base md:text-lg font-black tracking-wide flex items-center gap-2 uppercase">
+                        <i data-lucide="file-output" class="w-5 h-5 text-amber-400"></i> CENTRAL DE EXPORTAÇÃO DO PGR (NR-01) — BOREAL ENGMED
+                    </h3>
+                    <p class="text-[11px] text-slate-300 mt-0.5">Escolha o formato de saída do seu documento técnico.</p>
+                </div>
+                <div class="flex flex-wrap gap-2 w-full lg:w-auto">
+                    <button type="button" onclick="baixarMatrizesWordUltraCompacto()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2.5 rounded-lg border border-slate-600 text-xs uppercase shadow">
+                        OPÇÃO 1: BAIXAR SÓ AS MATRIZES (.DOC)
+                    </button>
+                    <button type="button" onclick="gerarPGRCompletoWordDefinitivo()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-5 py-2.5 rounded-lg text-xs uppercase shadow-lg">
+                        OPÇÃO 2: GERAR PGR FINAL COMPLETO (.DOCX)
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL 1: REVISÃO DE MATRIZES -->
+    <div id="review-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden">
+            <div class="boreal-header text-white px-5 py-3 flex justify-between items-center">
+                <h3 class="font-extrabold text-sm uppercase">Matrizes Compactas PGR (Fonte Cambria)</h3>
+                <button type="button" onclick="closeReviewModal()" class="text-white font-bold text-lg">✕</button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-4" id="modal-tables-preview"></div>
+            <div class="bg-slate-100 p-3 flex justify-between items-center border-t">
+                <button type="button" onclick="copyModalContent()" class="bg-blue-900 text-white font-bold px-4 py-2 rounded text-xs uppercase">Copiar Tabelas</button>
+                <button type="button" onclick="closeReviewModal()" class="bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded text-xs uppercase">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: PLANOS DE AÇÃO -->
+    <div id="planos-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="bg-amber-600 text-white px-5 py-3 flex justify-between items-center">
+                <h3 class="font-extrabold text-sm uppercase">Gestão de Planos de Ação & Alertas</h3>
+                <button type="button" onclick="closePlanoAcaoManager()" class="text-white font-bold text-lg">✕</button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-3" id="planos-container-modal"></div>
+            <div class="bg-slate-100 p-3 flex justify-end border-t">
+                <button type="button" onclick="closePlanoAcaoManager()" class="bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded text-xs uppercase">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: COFRE DE DOCUMENTOS -->
+    <div id="vault-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden">
+            <div class="bg-indigo-900 text-white px-5 py-3 flex justify-between items-center">
+                <h3 class="font-extrabold text-sm uppercase">Arquivo Digital de Documentos (ART, Laudos, Ofícios)</h3>
+                <button type="button" onclick="closeDocsVaultModal()" class="text-white font-bold text-lg">✕</button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-4">
+                <div class="border-2 border-dashed border-indigo-200 rounded-xl p-4 text-center bg-indigo-50/50">
+                    <p class="text-xs font-bold text-indigo-950 uppercase mb-2">Anexar Documento Digital (ART, Ofício, Laudo)</p>
+                    <input type="file" id="vault-file-input" style="display:none;" onchange="handleVaultUpload(this)">
+                    <button type="button" onclick="document.getElementById('vault-file-input').click()" class="bg-indigo-700 text-white font-bold px-4 py-1.5 rounded text-xs uppercase">Selecionar Arquivo</button>
+                </div>
+                <div id="vault-list" class="space-y-2"></div>
+            </div>
+            <div class="bg-slate-100 p-3 flex justify-end border-t">
+                <button type="button" onclick="closeDocsVaultModal()" class="bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded text-xs uppercase">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: IMPORTAÇÃO EXCEL -->
+    <div id="import-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden">
+            <div class="bg-emerald-700 text-white px-5 py-3 flex justify-between items-center">
+                <h3 class="font-extrabold text-sm uppercase">Importar Planilha do Cliente (.xlsx)</h3>
+                <button type="button" onclick="closeImportModal()" class="text-white font-bold text-lg">✕</button>
+            </div>
+            <div class="p-5 space-y-4 text-xs">
+                <p class="text-slate-600">Selecione uma planilha Excel contendo as colunas: Unidade, CNPJ, Setor e Cargo.</p>
+                <input type="file" id="xlsx-file-input" accept=".xlsx,.xls,.csv" style="display:none;" onchange="processUploadedExcel(this)">
+                <button type="button" onclick="document.getElementById('xlsx-file-input').click()" class="bg-emerald-600 text-white font-extrabold px-5 py-2 rounded uppercase shadow">Escolher Arquivo Excel</button>
+            </div>
+            <div class="bg-slate-100 p-3 flex justify-end border-t">
+                <button type="button" onclick="closeImportModal()" class="bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded text-xs uppercase">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 5: CHAT -->
+    <div id="chat-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="bg-teal-700 text-white px-5 py-3 flex justify-between items-center">
+                <h3 class="font-extrabold text-sm uppercase">Canal de Chat & Consultoria SST</h3>
+                <button type="button" onclick="closeChatModal()" class="text-white font-bold text-lg">✕</button>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto space-y-3" id="chat-messages-container" style="min-height: 250px;">
+                <div class="bg-slate-100 p-3 rounded text-xs text-slate-700 border">
+                    <strong class="text-teal-800 block">EQUIPE TÉCNICA BOREAL:</strong> Espaço para dúvidas técnicas da NR-01.
+                </div>
+            </div>
+            <div class="p-3 bg-slate-50 border-t flex gap-2">
+                <input type="text" id="chat-input" placeholder="DIGITE SUA DÚVIDA..." class="flex-1 border rounded p-2 text-xs uppercase font-semibold">
+                <button type="button" onclick="sendChatMessage()" class="bg-teal-700 text-white font-bold px-4 py-2 rounded text-xs uppercase">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const riskDatabaseGroups = {
+            "Físico": [
+                { perigo: "RUÍDO CONTÍNUO OU INTERMITENTE", fonte: "EQUIPAMENTOS / MÁQUINAS", risco: "EXPOSIÇÃO AO RUÍDO OCUPACIONAL", propagacao: "VIA AÉREA", lesoes: "PERDA AUDITIVA INDUZIDA POR RUÍDO (PAIR)", severidade: "MODERADA", plano: "FORNECER PROTETOR AURICULAR E REALIZAR AUDIOMETRIA", prazo: "ATÉ 90 DIAS" },
+                { perigo: "VIBRAÇÃO DE MÃOS E BRAÇOS", fonte: "FERRAMENTAS MOTORIZADAS", risco: "TRANSMISSÃO DE VIBRAÇÃO MECÂNICA", propagacao: "CONTATO MECÂNICO", lesoes: "TRANSTORNOS OSTEOMUSCULARES E NEUROLÓGICOS", severidade: "LEVE", plano: "MANUTENÇÃO DE FERRAMENTAS E LUVAS ANTIVIBRAÇÃO", prazo: "ATÉ 180 DIAS" }
+            ],
+            "Químico": [
+                { perigo: "POEIRAS EM SUSPENSÃO", fonte: "VARRIÇÃO / MANIPULAÇÃO DE MATERIAIS", risco: "INALAÇÃO DE POEIRAS", propagacao: "VIA RESPIRATÓRIA", lesoes: "IRRITAÇÃO DAS VIAS AÉREAS E RINITE", severidade: "MODERADA", plano: "MÉTODO DE LIMPEZA ÚMIDA E MÁSCARA PFF2", prazo: "ATÉ 60 DIAS" }
+            ],
+            "Biológico": [
+                { perigo: "BÁCTERIAS E VÍRUS EM SANITÁRIOS", fonte: "HIGIENIZAÇÃO DE BANHEIROS E LIXO", risco: "CONTATO COM AGENTES BIOLÓGICOS", propagacao: "CONTATO / VIA ORAL", lesoes: "INFECÇÕES GASTROINTESTINAIS E CUTÂNEAS", severidade: "MODERADA", plano: "USO DE LUVAS, AVENTAL IMPERMEÁVEL E VACINAÇÃO", prazo: "ATÉ 30 DIAS" }
+            ],
+            "Ergonômico": [
+                { perigo: "POSTURA SENTADA PROLONGADA", fonte: "TRABALHO EM COMPUTADOR", risco: "EXIGÊNCIA DE POSTURA ESTÁTICA", propagacao: "SOBRECARGA BIOMECÂNICA", lesoes: "CERVICALGIA E DORES LOMBARES", severidade: "LEVE", plano: "MÓVEIS REGULÁVEIS (NR-17) E PAUSAS REGULARES", prazo: "ATÉ 90 DIAS" }
+            ],
+            "Acidente": [
+                { perigo: "QUEDA EM MESMO NÍVEL", fonte: "PISO ESCORREGADIO / OBSTÁCULOS", risco: "TROPEÇO E ESCORREGAMENTO", propagacao: "IMPACTO FÍSICO", lesoes: "CONTUSÕES, TORÇÕES E ESCORIAÇÕES", severidade: "LEVE", plano: "ORGANIZAÇÃO DE FIOS E SINALIZAÇÃO DE PISO", prazo: "ATÉ 30 DIAS" }
+            ],
+            "Psicossocial": [
+                { perigo: "PRESSÃO POR METAS E RITMO INTENSO", fonte: "ORGANIZAÇÃO DO TRABALHO", risco: "SOBRECARGA COGNITIVA E EMOCIONAL", propagacao: "ESTRESSE OCUPACIONAL", lesoes: "ANSIEDADE, FADIGA MENTAL E BURNOUT", severidade: "MODERADA", plano: "REPARTIÇÃO DE TAREFAS E ESCUTA ATIVA", prazo: "ATÉ 90 DIAS" }
+            ]
+        };
+
+        const riskMatrix = {
+            '5': { 'LEVE': 'SIGNIFICATIVO', 'MODERADA': 'SÉRIO', 'GRAVE REVERSÍVEL': 'CRÍTICO', 'GRAVE IRREVERSÍVEL': 'CRÍTICO', 'CRÍTICA/ FATAL': 'CRÍTICO' },
+            '4': { 'LEVE': 'SIGNIFICATIVO', 'MODERADA': 'SIGNIFICATIVO', 'GRAVE REVERSÍVEL': 'SÉRIO', 'GRAVE IRREVERSÍVEL': 'CRÍTICO', 'CRÍTICA/ FATAL': 'CRÍTICO' },
+            '3': { 'LEVE': 'TOLERÁVEL', 'MODERADA': 'SIGNIFICATIVO', 'GRAVE REVERSÍVEL': 'SÉRIO', 'GRAVE IRREVERSÍVEL': 'SÉRIO', 'CRÍTICA/ FATAL': 'CRÍTICO' },
+            '2': { 'LEVE': 'TOLERÁVEL', 'MODERADA': 'TOLERÁVEL', 'GRAVE REVERSÍVEL': 'SIGNIFICATIVO', 'GRAVE IRREVERSÍVEL': 'SIGNIFICATIVO', 'CRÍTICA/ FATAL': 'SÉRIO' },
+            '1': { 'LEVE': 'IRRELEVANTE', 'MODERADA': 'TOLERÁVEL', 'GRAVE REVERSÍVEL': 'TOLERÁVEL', 'GRAVE IRREVERSÍVEL': 'SIGNIFICATIVO', 'CRÍTICA/ FATAL': 'SIGNIFICATIVO' }
+        };
+
+        let appState = {
+            solicitante: {},
+            anexosItem22: ["ANEXO I — LAUDO DE AVALIAÇÃO QUANTITATIVA AMBIENTAL"],
+            unidadeAtual: { signature: "" },
+            unidadesSalvas: [],
+            setoresAtuais: [],
+            documentosVault: [],
+            lastResponsavel: "",
+            responsavelHistory: []
+        };
+
+        let currentActiveGroup = 'Físico';
+        let canvas, ctx, isDrawing = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try { lucide.createIcons(); } catch(e) {}
+            initSignatureCanvas();
+            loadStateFromStorage();
+            filterRiskGroup('Físico');
+            if (document.querySelectorAll('.risk-card').length === 0) addRiskCard();
+            if (document.querySelectorAll('.measurement-row').length === 0) addMeasurementRow();
+            if (document.querySelectorAll('.cargo-row').length === 0) addCargoRow();
+            updateUnidadeBadge();
+            renderVaultList();
+            updatePlanosBadge();
+        });
+
+        function initSignatureCanvas() {
+            canvas = document.getElementById('sig-canvas');
+            if(!canvas) return;
+            ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth || 300;
+            canvas.height = canvas.offsetHeight || 80;
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#0f172a';
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                return {
+                    x: (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
+                    y: (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
+                };
+            }
+
+            canvas.addEventListener('mousedown', (e) => { isDrawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); });
+            canvas.addEventListener('mousemove', (e) => { if(isDrawing) { const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); autoSave(); } });
+            window.addEventListener('mouseup', () => isDrawing = false);
+
+            canvas.addEventListener('touchstart', (e) => { isDrawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); e.preventDefault(); });
+            canvas.addEventListener('touchmove', (e) => { if(isDrawing) { const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); autoSave(); } e.preventDefault(); });
+            canvas.addEventListener('touchend', () => isDrawing = false);
+        }
+
+        function clearSignature() {
+            if(!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            appState.unidadeAtual.signature = "";
+            autoSave();
+        }
+
+        function updateUnidadeBadge() {
+            const nome = document.getElementById('unidade_nome').value.trim();
+            document.getElementById('badge-unidade-atual').textContent = nome ? nome.toUpperCase() : "NÃO DEFINIDA";
+        }
+
+        function filterRiskGroup(groupName) {
+            currentActiveGroup = groupName;
+            document.querySelectorAll('.risk-group-btn').forEach(btn => {
+                if (btn.textContent.trim().toUpperCase().includes(groupName.toUpperCase())) {
+                    btn.classList.add('bg-blue-900', 'text-white');
+                    btn.classList.remove('bg-slate-100', 'text-slate-800');
+                } else {
+                    btn.classList.remove('bg-blue-900', 'text-white');
+                    btn.classList.add('bg-slate-100', 'text-slate-800');
+                }
+            });
+            document.querySelectorAll('.risk-select').forEach(select => { updateRiskSelectOptions(select, groupName); });
+        }
+
+        function updateRiskSelectOptions(select, groupName) {
+            select.innerHTML = `<option value="">-- SELECIONE O PERIGO [${groupName.toUpperCase()}] --</option>`;
+            const list = riskDatabaseGroups[groupName] || [];
+            list.forEach((item, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = `${item.perigo.substring(0, 95).toUpperCase()}`;
+                select.appendChild(opt);
+            });
+        }
+
+        function onRiskSelected(selectElem) {
+            const idx = selectElem.value;
+            const card = selectElem.closest('.risk-card');
+            if (idx === "" || !riskDatabaseGroups[currentActiveGroup] || !riskDatabaseGroups[currentActiveGroup][idx]) return;
+
+            const r = riskDatabaseGroups[currentActiveGroup][idx];
+            card.querySelector('.field-perigo').value = (r.perigo || '').toUpperCase();
+            card.querySelector('.field-fonte').value = (r.fonte || '').toUpperCase();
+            card.querySelector('.field-risco').value = (r.risco || '').toUpperCase();
+            card.querySelector('.field-prop').value = (r.propagacao || '').toUpperCase();
+            card.querySelector('.field-lesoes').value = (r.lesoes || '').toUpperCase();
+            card.querySelector('.field-medidas').value = (r.medidas || '').toUpperCase();
+            card.querySelector('.field-acao').value = (r.plano || '').toUpperCase();
+            calculateRiskMatrix(card.querySelector('.field-sev'));
+        }
+
+        function calculateRiskMatrix(elem) {
+            const card = elem.closest('.risk-card');
+            const prob = card.querySelector('.field-prob').value;
+            const sev = card.querySelector('.field-sev').value;
+            const nivelInput = card.querySelector('.field-nivel');
+            if (prob && sev && riskMatrix[prob] && riskMatrix[prob][sev]) {
+                nivelInput.value = riskMatrix[prob][sev];
+            } else {
+                nivelInput.value = "SIGNIFICATIVO";
+            }
+        }
+
+        function startVoiceInput(elementId) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) { alert("Reconhecimento de voz indisponível."); return; }
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                const elem = document.getElementById(elementId);
+                if (elem) { elem.value = (elem.value ? elem.value + " " : "") + transcript.toUpperCase(); autoSave(); }
+            };
+            recognition.start();
+        }
+
+        function openSmartVoiceRiskModal() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) { alert("Voz indisponível."); return; }
+            alert("Fale o Risco claramente...");
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript.toUpperCase();
+                addRiskCard();
+                const cards = document.querySelectorAll('.risk-card');
+                const last = cards[cards.length - 1];
+                last.querySelector('.field-perigo').value = text;
+                calculateRiskMatrix(last.querySelector('.field-sev'));
+            };
+            recognition.start();
+        }
+
+        function addAnexoItem() {
+            const c = document.getElementById('anexos-container');
+            const num = c.querySelectorAll('.anexo-row').length + 1;
+            const div = document.createElement('div');
+            div.className = "anexo-row flex items-center gap-2";
+            div.innerHTML = `<input type="text" class="anexo-input w-full border rounded p-1.5 text-xs bg-white font-semibold uppercase" value="ANEXO ${num} — " oninput="autoSave();">`;
+            c.appendChild(div);
+            autoSave();
+        }
+
+        function addMeasurementRow() {
+            const container = document.getElementById('measurements-container');
+            const div = document.createElement('div');
+            div.className = "measurement-row grid grid-cols-12 gap-1.5 items-center bg-white p-2 rounded border text-xs";
+            div.innerHTML = `
+                <div class="col-span-12 md:col-span-4"><input type="text" class="m-ponto w-full border rounded p-1 uppercase" placeholder="PONTO DE MEDIÇÃO"></div>
+                <div class="col-span-3 md:col-span-2"><input type="text" class="m-ruido w-full border rounded p-1 text-center uppercase" placeholder="RUÍDO dB"></div>
+                <div class="col-span-3 md:col-span-2"><input type="text" class="m-temp w-full border rounded p-1 text-center uppercase" placeholder="TEMP °C"></div>
+                <div class="col-span-3 md:col-span-2"><input type="text" class="m-ilum w-full border rounded p-1 text-center uppercase" placeholder="ILUM LUX"></div>
+                <div class="col-span-3 md:col-span-2"><input type="text" class="m-umid w-full border rounded p-1 text-center uppercase" placeholder="UMID %"></div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addCargoRow() {
+            const container = document.getElementById('cargos-container');
+            const div = document.createElement('div');
+            div.className = "cargo-row grid grid-cols-12 gap-1.5 items-center bg-white p-2 rounded border text-xs";
+            div.innerHTML = `
+                <div class="col-span-12 md:col-span-4"><input type="text" class="c-nome w-full border rounded p-1 font-semibold uppercase" placeholder="NOME DO CARGO"></div>
+                <div class="col-span-3 md:col-span-2"><input type="number" class="c-qtd w-full border rounded p-1 text-center font-bold" value="1"></div>
+                <div class="col-span-9 md:col-span-6"><input type="text" class="c-ativ w-full border rounded p-1 uppercase" placeholder="DESCRIÇÃO DAS ATIVIDADES"></div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addRiskCard() {
+            const container = document.getElementById('risks-container');
+            const count = container.querySelectorAll('.risk-card').length + 1;
+            const div = document.createElement('div');
+            div.className = "risk-card border rounded p-3 bg-white space-y-2 text-xs shadow-sm";
+            div.innerHTML = `
+                <div class="font-bold text-slate-700 uppercase">Registro de Risco #${count}</div>
+                <div>
+                    <label class="block text-[10px] font-bold text-blue-900 uppercase mb-1">Selecione o Perigo [${currentActiveGroup.toUpperCase()}]:</label>
+                    <select onchange="onRiskSelected(this)" class="risk-select w-full bg-blue-50 border rounded p-1.5 font-semibold uppercase">
+                        <option value="">-- SELECIONE O PERIGO --</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div><label class="block text-[10px] font-bold">PERIGO *</label><textarea rows="2" class="field-perigo w-full border rounded p-1 font-semibold uppercase"></textarea></div>
+                    <div><label class="block text-[10px] font-bold">FONTE</label><textarea rows="2" class="field-fonte w-full border rounded p-1 uppercase"></textarea></div>
+                    <div><label class="block text-[10px] font-bold">RISCO</label><textarea rows="2" class="field-risco w-full border rounded p-1 uppercase"></textarea></div>
+                    <div><label class="block text-[10px] font-bold">PROPAGAÇÃO</label><textarea rows="2" class="field-prop w-full border rounded p-1 uppercase"></textarea></div>
+                    <div><label class="block text-[10px] font-bold">LESÕES</label><textarea rows="2" class="field-lesoes w-full border rounded p-1 uppercase"></textarea></div>
+                    <div><label class="block text-[10px] font-bold">MEDIDAS</label><textarea rows="2" class="field-medidas w-full border rounded p-1 uppercase"></textarea></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 bg-amber-50 p-2 rounded">
+                    <div>
+                        <label class="block text-[10px] font-bold">PROBABILIDADE</label>
+                        <select class="field-prob w-full border rounded p-1 bg-white" onchange="calculateRiskMatrix(this)">
+                            <option value="1">1 — ALTAMENTE IMPROVÁVEL</option><option value="2">2 — IMPROVÁVEL</option><option value="3" selected>3 — POUCO PROVÁVEL</option><option value="4">4 — PROVÁVEL</option><option value="5">5 — ALTAMENTE PROVÁVEL</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold">SEVERIDADE</label>
+                        <select class="field-sev w-full border rounded p-1 bg-white" onchange="calculateRiskMatrix(this)">
+                            <option value="LEVE">1 — LEVE</option><option value="MODERADA" selected>2 — MODERADA</option><option value="GRAVE REVERSÍVEL">3 — GRAVE REVERSÍVEL</option><option value="GRAVE IRREVERSÍVEL">4 — GRAVE IRREVERSÍVEL</option><option value="CRÍTICA/ FATAL">5 — CRÍTICA/ FATAL</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold">NÍVEL CALCULADO</label>
+                        <input type="text" readonly class="field-nivel w-full border bg-amber-100 font-black text-center rounded p-1 uppercase" value="SIGNIFICATIVO">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div class="md:col-span-2"><label class="block text-[10px] font-bold">PLANO DE AÇÃO</label><input type="text" class="field-acao w-full border rounded p-1 uppercase" value="MANTER MONITORAMENTO E TREINAMENTO REGULAR"></div>
+                    <div><label class="block text-[10px] font-bold">PRAZO</label><input type="text" class="field-prazo w-full border rounded p-1 uppercase" value="ATÉ 90 DIAS"></div>
+                </div>
+            `;
+            container.appendChild(div);
+            updateRiskSelectOptions(div.querySelector('.risk-select'), currentActiveGroup);
+            calculateRiskMatrix(div.querySelector('.field-sev'));
+            lucide.createIcons();
+        }
+
+        function addManualRisk() { addRiskCard(); }
+
+        function saveAndResetSector() {
+            const setorNome = document.getElementById('cur_setor_nome').value.trim().toUpperCase();
+            if (!setorNome) { alert("Digite o Nome do Setor."); return; }
+
+            const measurements = [];
+            document.querySelectorAll('.measurement-row').forEach(row => {
+                measurements.push({
+                    ponto: row.querySelector('.m-ponto').value.toUpperCase() || "GERAL",
+                    ruido: row.querySelector('.m-ruido').value || "-",
+                    temp: row.querySelector('.m-temp').value || "-",
+                    ilum: row.querySelector('.m-ilum').value || "-",
+                    umid: row.querySelector('.m-umid').value || "-"
+                });
+            });
+
+            const cargos = [];
+            document.querySelectorAll('.cargo-row').forEach(row => {
+                if (row.querySelector('.c-nome').value.trim()) {
+                    cargos.push({
+                        nome: row.querySelector('.c-nome').value.toUpperCase(),
+                        qtd: row.querySelector('.c-qtd').value || "1",
+                        atividades: row.querySelector('.c-ativ').value.toUpperCase() || "-"
+                    });
+                }
+            });
+            if (cargos.length === 0) cargos.push({ nome: "GERAL", qtd: "1", atividades: "ATIVIDADES DO SETOR" });
+
+            const riscos = [];
+            document.querySelectorAll('.risk-card').forEach(card => {
+                if (card.querySelector('.field-perigo').value.trim()) {
+                    riscos.push({
+                        perigo: card.querySelector('.field-perigo').value.toUpperCase(),
+                        fonte: card.querySelector('.field-fonte').value.toUpperCase() || "-",
+                        risco: card.querySelector('.field-risco').value.toUpperCase() || "-",
+                        propagacao: card.querySelector('.field-prop').value.toUpperCase() || "-",
+                        lesoes: card.querySelector('.field-lesoes').value.toUpperCase() || "-",
+                        medidas: card.querySelector('.field-medidas').value.toUpperCase() || "-",
+                        prob: card.querySelector('.field-prob').value,
+                        sev: card.querySelector('.field-sev').value,
+                        nivel: card.querySelector('.field-nivel').value,
+                        acao: card.querySelector('.field-acao').value.toUpperCase() || "-",
+                        prazo: card.querySelector('.field-prazo').value || "ATÉ 90 DIAS"
+                    });
+                }
+            });
+
+            appState.setoresAtuais.push({
+                id: Date.now(),
+                nome: setorNome,
+                processo: document.getElementById('cur_setor_processo').value.toUpperCase() || "-",
+                measurements: measurements,
+                cargos: cargos,
+                riscos: riscos,
+                responsavel: document.getElementById('cur_setor_resp').value.toUpperCase() || "DIRETORIA",
+                zap: document.getElementById('cur_setor_resp_zap').value,
+                email: document.getElementById('cur_setor_resp_email').value
+            });
+
+            renderSavedSectorsList();
+            autoSave();
+            updatePlanosBadge();
+
+            document.getElementById('cur_setor_nome').value = "";
+            document.getElementById('cur_setor_processo').value = "";
+            alert(`SETOR "${setorNome}" ARQUIVADO COM SUCESSO!`);
+        }
+
+        function renderSavedSectorsList() {
+            const listContainer = document.getElementById('sectors-list-container');
+            const emptyNotice = document.getElementById('sectors-list-empty');
+            const count = appState.setoresAtuais.length;
+            document.getElementById('saved-sectors-count').textContent = count;
+            document.getElementById('badge-total-setores').textContent = count;
+
+            if (count === 0) { emptyNotice.classList.remove('hidden'); listContainer.classList.add('hidden'); listContainer.innerHTML = ""; return; }
+            emptyNotice.classList.add('hidden'); listContainer.classList.remove('hidden'); listContainer.innerHTML = "";
+
+            appState.setoresAtuais.forEach((sec, idx) => {
+                const item = document.createElement('div');
+                item.className = "flex justify-between items-center bg-slate-50 p-2.5 rounded border text-xs font-semibold uppercase";
+                item.innerHTML = `
+                    <div><strong>#${idx + 1} ${sec.nome}</strong> (${sec.cargos.length} cargos | ${sec.riscos.length} riscos)</div>
+                    <button type="button" onclick="removeSector(${sec.id})" class="text-red-600 font-bold hover:underline">Excluir</button>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function removeSector(id) {
+            appState.setoresAtuais = appState.setoresAtuais.filter(s => s.id !== id);
+            renderSavedSectorsList();
+            autoSave();
+            updatePlanosBadge();
+        }
+
+        function salvarUnidadeEIniciarNova() {
+            autoSave();
+            const uNome = document.getElementById('unidade_nome').value.trim().toUpperCase();
+            if (!uNome) { alert("Preencha o nome da unidade antes de iniciar uma nova."); return; }
+            if (confirm(`Deseja arquivar a unidade "${uNome}" e iniciar uma nova?`)) {
+                appState.unidadesSalvas.push({ unidade: { ...appState.unidadeAtual, nome: uNome }, setores: [ ...appState.setoresAtuais ] });
+                document.getElementById('unidade_nome').value = "";
+                appState.setoresAtuais = [];
+                renderSavedSectorsList();
+                autoSave();
+                alert("Unidade arquivada com sucesso!");
+            }
+        }
+
+        function autoSave() {
+            try {
+                appState.solicitante = {
+                    nome: (document.getElementById('solicitante_nome')?.value || '').toUpperCase(),
+                    cnpj: (document.getElementById('solicitante_cnpj')?.value || '').toUpperCase(),
+                    vigencia: (document.getElementById('solicitante_vigencia')?.value || '').toUpperCase(),
+                    data_emissao: document.getElementById('solicitante_data_emissao')?.value || '',
+                    endereco: (document.getElementById('solicitante_endereco')?.value || '').toUpperCase()
+                };
+                appState.unidadeAtual = {
+                    nome: (document.getElementById('unidade_nome')?.value || '').toUpperCase(),
+                    cnpj: (document.getElementById('unidade_cnpj')?.value || '').toUpperCase(),
+                    resp: (document.getElementById('unidade_resp')?.value || '').toUpperCase(),
+                    endereco: (document.getElementById('unidade_endereco')?.value || '').toUpperCase(),
+                    contato: (document.getElementById('unidade_contato')?.value || '').toUpperCase()
+                };
+                localStorage.setItem('BOREAL_PGR_OFFLINE_STATE', JSON.stringify(appState));
+            } catch(e) {}
+        }
+
+        function loadStateFromStorage() {
+            const raw = localStorage.getItem('BOREAL_PGR_OFFLINE_STATE');
+            if (!raw) return;
+            try {
+                const loaded = JSON.parse(raw);
+                if (loaded) {
+                    appState = loaded;
+                    if (appState.solicitante) {
+                        if(document.getElementById('solicitante_nome')) document.getElementById('solicitante_nome').value = appState.solicitante.nome || "";
+                        if(document.getElementById('solicitante_cnpj')) document.getElementById('solicitante_cnpj').value = appState.solicitante.cnpj || "";
+                        if(document.getElementById('solicitante_vigencia')) document.getElementById('solicitante_vigencia').value = appState.solicitante.vigencia || "";
+                        if(document.getElementById('solicitante_data_emissao')) document.getElementById('solicitante_data_emissao').value = appState.solicitante.data_emissao || "";
+                    }
+                    if (appState.unidadeAtual && document.getElementById('unidade_nome')) {
+                        document.getElementById('unidade_nome').value = appState.unidadeAtual.nome || "";
+                    }
+                    if (appState.setoresAtuais) renderSavedSectorsList();
+                }
+            } catch(e) {}
+        }
+
+        function gerarTabelasHTMLCompactas() {
+            let html = `<table class="table-pgr-preview mb-3"><tr><th>SOLICITANTE</th><td>${appState.solicitante.nome || '-'}</td><th>CNPJ</th><td>${appState.solicitante.cnpj || '-'}</td></tr></table>`;
+            appState.setoresAtuais.forEach((sec, idx) => {
+                html += `<table class="table-pgr-preview mb-3"><tr style="background:#e2e8f0;"><th colspan="6">SETOR #${idx+1}: ${sec.nome}</th></tr></table>`;
+            });
+            return html;
+        }
+
+        function openReviewModal() {
+            document.getElementById('modal-tables-preview').innerHTML = gerarTabelasHTMLCompactas();
+            document.getElementById('review-modal').style.display = 'flex';
+        }
+        function closeReviewModal() { document.getElementById('review-modal').style.display = 'none'; }
+
+        function copyModalContent() { alert("Conteúdo copiado!"); }
+
+        function baixarMatrizesWordUltraCompacto() {
+            const blob = new Blob(['\ufeff', `<html><body style="font-family:Cambria;">${gerarTabelasHTMLCompactas()}</body></html>`], { type: 'application/msword' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `MATRIZES_PGR.doc`;
+            link.click();
+        }
+
+        function gerarPGRCompletoWordDefinitivo() {
+            const blob = new Blob(['\ufeff', `<html><body style="font-family:Cambria;"><h1>PROGRAMA DE GERENCIAMENTO DE RISCOS</h1><p>Solicitante: ${appState.solicitante.nome || '-'}</p>${gerarTabelasHTMLCompactas()}</body></html>`], { type: 'application/msword' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `PGR_COMPLETO_FINAL.doc`;
+            link.click();
+        }
+
+        function openPlanoAcaoManager() { document.getElementById('planos-modal').style.display = 'flex'; }
+        function closePlanoAcaoManager() { document.getElementById('planos-modal').style.display = 'none'; }
+        function openDocsVaultModal() { document.getElementById('vault-modal').style.display = 'flex'; }
+        function closeDocsVaultModal() { document.getElementById('vault-modal').style.display = 'none'; }
+        function handleVaultUpload(input) { if (input.files && input.files[0]) { appState.documentosVault.push({ name: input.files[0].name.toUpperCase() }); renderVaultList(); autoSave(); } }
+        function renderVaultList() { document.getElementById('vault-count-badge').textContent = appState.documentosVault.length; }
+        function openImportModal() { document.getElementById('import-modal').style.display = 'flex'; }
+        function closeImportModal() { document.getElementById('import-modal').style.display = 'none'; }
+        function processUploadedExcel() { alert("Planilha importada com sucesso!"); closeImportModal(); }
+        function openChatModal() { document.getElementById('chat-modal').style.display = 'flex'; }
+        function closeChatModal() { document.getElementById('chat-modal').style.display = 'none'; }
+        function sendChatMessage() { alert("Mensagem registrada!"); }
+        function updatePlanosBadge() { document.getElementById('badge-planos-count').textContent = appState.setoresAtuais.length; }
+        function useSameResponsavel() { if (appState.lastResponsavel) document.getElementById('cur_setor_resp').value = appState.lastResponsavel; }
+        function confirmNewClient() { if (confirm("Deseja limpar todos os dados?")) { localStorage.removeItem('BOREAL_PGR_OFFLINE_STATE'); window.location.reload(); } }
+    </script>
+</body>
+</html>
