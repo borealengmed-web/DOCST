@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SISTEMA PGR BOREAL — CENTRAL COMPLETA SST</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- SheetJS CDN para leitura de planilhas Excel (.xlsx) -->
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
     <style>
@@ -18,509 +15,7 @@
         .signature-canvas { border: 2px dashed #94a3b8; background: #ffffff; cursor: crosshair; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        
-        /* Forçar todos os campos de digitação em MAIÚSCULO */
         input[type="text"], textarea { text-transform: uppercase; }
-        
-        /* Tabela ultra-compacta para visualização com fonte Cambria */
-        .table-pgr-preview { font-family: 'Cambria', serif; font-size: 10pt; border-collapse: collapse; width: 100%; text-transform: uppercase; }
-        .table-pgr-preview th, .table-pgr-preview td {
-            border: 1px solid #1e293b;
-            padding: 2px 4px !important;
-            line-height: 1.05 !important;
-            margin: 0 !important;
-            text-align: center !important;
-            vertical-align: middle !important;
-        }
-        .table-pgr-preview th {
-            background-color: #e2e8f0;
-            font-weight: bold;
-            font-size: 10.5pt;
-        }
-    </style>
-</head>
-<body class="text-slate-800 pb-32">
-
-    <!-- TOP NAV BAR COM IDENTIDADE BOREAL -->
-    <header class="boreal-header text-white sticky top-0 z-50 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap justify-between items-center gap-2">
-            <div class="flex items-center space-x-3">
-                <div class="bg-amber-500 text-slate-950 font-black text-xl px-2 py-0.5 rounded shadow">
-                    B
-                </div>
-                <div>
-                    <h1 class="font-extrabold text-base md:text-lg tracking-wide leading-none flex items-center gap-2">
-                        BOREAL ENGMED <span class="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-black uppercase">Gerador Completo PGR NR-01</span>
-                    </h1>
-                    <p class="text-[10px] text-blue-200 mt-0.5">SISTEMA INTEGRADO DE COLETA, DOCUMENTO-BASE & GESTÃO DE AÇÕES</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2">
-                <button type="button" onclick="openImportModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded flex items-center shadow-sm">
-                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 mr-1.5"></i> IMPORTAR PLANILHA (.XLSX)
-                </button>
-                <button type="button" onclick="confirmNewClient()" class="bg-red-800/80 hover:bg-red-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded border border-red-400/30 flex items-center shadow-sm">
-                    <i data-lucide="rotate-ccw" class="w-3 h-3 mr-1"></i> NOVO CLIENTE / LIMPAR
-                </button>
-            </div>
-        </div>
-
-        <!-- BARRA DE MÓDULOS FUTUROS, ARQUIVO GERAL & CHAT -->
-        <div class="bg-slate-950/70 border-t border-blue-900/60 px-4 py-1.5 overflow-x-auto">
-            <div class="max-w-7xl mx-auto flex items-center space-x-1 whitespace-nowrap text-[11px] font-bold">
-                <span class="text-amber-400 px-2 py-0.5 flex items-center"><i data-lucide="folder-git-2" class="w-3 h-3 mr-1"></i> MÓDULOS SST:</span>
-                <button type="button" class="bg-blue-800 text-white px-2.5 py-0.5 rounded">1. PGR (NR-01) [ATIVO]</button>
-                <button type="button" onclick="openModuleNotice('LTCAT / LTP')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">2. LTCAT / LTP</button>
-                <button type="button" onclick="openModuleNotice('LTI / LTIP (Insalubridade/Periculosidade)')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">3. LTI / LTIP</button>
-                <button type="button" onclick="openModuleNotice('Relatório de Avaliação Quantitativa')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">4. Rel. Aval. Quantitativa</button>
-                <button type="button" onclick="openModuleNotice('PCMSO (NR-07)')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">5. PCMSO (NR-07)</button>
-                <button type="button" onclick="openModuleNotice('APR / PT / Ordem de Serviço')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">6. APR / PT / O.S.</button>
-                <button type="button" onclick="openModuleNotice('PPP (eSocial S-2240)')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded hover:bg-slate-800">7. PPP / eSocial</button>
-                
-                <button type="button" onclick="openDocsVaultModal()" class="ml-2 bg-indigo-700 hover:bg-indigo-800 text-white px-2.5 py-0.5 rounded flex items-center shadow">
-                    <i data-lucide="archive" class="w-3 h-3 mr-1"></i> ARQUIVO DE DOCUMENTOS (ART/OFÍCIOS) (<span id="vault-count-badge">0</span>)
-                </button>
-                <button type="button" onclick="openChatModal()" class="ml-1 bg-teal-700 hover:bg-teal-800 text-white px-2.5 py-0.5 rounded flex items-center shadow">
-                    <i data-lucide="messages-square" class="w-3 h-3 mr-1"></i> CHAT DE CONSULTORIA SST
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- BARRA DE GESTÃO DA VISTORIA -->
-    <div class="max-w-7xl mx-auto px-4 mt-3">
-        <div class="bg-white border border-slate-300 rounded-xl p-3 flex flex-wrap justify-between items-center gap-3 shadow-sm">
-            <div class="flex items-center gap-3 flex-wrap">
-                <span class="text-xs font-bold text-slate-700 uppercase flex items-center">
-                    <i data-lucide="building" class="w-4 h-4 mr-1 text-blue-700"></i> UNIDADE ATUAL:
-                    <strong id="badge-unidade-atual" class="ml-1 text-blue-900 bg-blue-100 px-2 py-0.5 rounded">NÃO DEFINIDA</strong>
-                </span>
-                <span class="text-xs font-semibold text-slate-400">|</span>
-                <span class="text-xs font-bold text-emerald-700 flex items-center">
-                    <i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> <span id="badge-total-setores">0</span> SETOR(ES) SALVO(S)
-                </span>
-                <span class="text-xs font-semibold text-slate-400">|</span>
-                <span class="text-xs font-bold text-indigo-700 flex items-center">
-                    <i data-lucide="layers" class="w-4 h-4 mr-1"></i> <span id="badge-total-unidades">1</span> UNIDADE(S) NO PROJETO
-                </span>
-            </div>
-            <div class="flex items-center gap-2 flex-wrap">
-                <button type="button" onclick="openPlanoAcaoManager()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm">
-                    <i data-lucide="calendar-clock" class="w-3.5 h-3.5 mr-1.5"></i> GESTÃO DE PLANOS & ALERTAS (<span id="badge-planos-count">0</span>)
-                </button>
-                <button type="button" onclick="salvarUnidadeEIniciarNova()" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm">
-                    <i data-lucide="plus-circle" class="w-3.5 h-3.5 mr-1.5"></i> SALVAR UNIDADE E INICIAR NOVA
-                </button>
-                <button type="button" onclick="openReviewModal()" class="bg-blue-900 hover:bg-blue-950 text-white font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm">
-                    <i data-lucide="eye" class="w-3.5 h-3.5 mr-1.5"></i> VER MATRIZES SALVAS
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- CONTAINER PRINCIPAL -->
-    <main class="max-w-7xl mx-auto px-4 py-3 space-y-5">
-
-        <!-- MATRIZ 01: CAPA DO PGR -->
-        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <span class="bg-blue-900 text-white text-[11px] font-black px-2 py-0.5 rounded">MATRIZ 01</span>
-                    <h2 class="font-bold text-slate-800 text-xs md:text-sm uppercase tracking-wide">Capa do PGR — Caracterização do Solicitante</h2>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="startVoiceInput('solicitante_nome')" class="text-xs bg-slate-200 hover:bg-slate-300 p-1 rounded text-slate-700" title="Ditar Nome do Solicitante">
-                        <i data-lucide="mic" class="w-3.5 h-3.5 text-blue-700"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div class="md:col-span-2">
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nome do Solicitante (Razão Social) *</label>
-                    <input type="text" id="solicitante_nome" placeholder="Ex: TRIBUNAL REGIONAL DO TRABALHO / PREFEITURA MUNICIPAL" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">CNPJ do Solicitante *</label>
-                    <input type="text" id="solicitante_cnpj" placeholder="00.000.000/0001-00" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Vigência do PGR *</label>
-                    <input type="text" id="solicitante_vigencia" placeholder="Ex: 2026 A 2028" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Data de Emissão *</label>
-                    <input type="date" id="solicitante_data_emissao" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" onchange="autoSave()">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">CNAE Principal</label>
-                    <input type="text" id="solicitante_cnae" placeholder="Ex: 84.11-6-00" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Endereço da Sede do Solicitante</label>
-                    <input type="text" id="solicitante_endereco" placeholder="Ex: AV. PRESIDENTE TANCREDO NEVES, S/N" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                </div>
-            </div>
-
-            <!-- ITEM 2.2 — ANEXOS TÉCNICOS -->
-            <div class="border-t border-slate-200 p-4 bg-slate-50/70 space-y-2">
-                <div class="flex justify-between items-center">
-                    <span class="text-[11px] font-bold text-slate-800 uppercase flex items-center">
-                        <i data-lucide="paperclip" class="w-3.5 h-3.5 mr-1.5 text-blue-800"></i> ITEM 2.2 DO PGR — NOME DOS ANEXOS VINCULADOS AO DOCUMENTO:
-                    </span>
-                    <button type="button" onclick="addAnexoItem()" class="text-[10px] bg-blue-800 hover:bg-blue-900 text-white font-bold px-2 py-0.5 rounded flex items-center">
-                        <i data-lucide="plus" class="w-3 h-3 mr-1"></i> + Adicionar Anexo
-                    </button>
-                </div>
-                <div id="anexos-container" class="space-y-1.5">
-                    <div class="anexo-row flex items-center gap-2">
-                        <input type="text" class="anexo-input w-full border border-slate-300 rounded p-1.5 text-xs bg-white uppercase font-semibold" placeholder="EX: ANEXO I — LAUDO DE AVALIAÇÃO DE RUÍDO" value="ANEXO I — LAUDO DE AVALIAÇÃO QUANTITATIVA AMBIENTAL" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                        <button type="button" onclick="removeAnexoItem(this)" class="text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- MATRIZ 02: CAPÍTULO 1 (DADOS DA UNIDADE) -->
-        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <span class="bg-blue-900 text-white text-[11px] font-black px-2 py-0.5 rounded">MATRIZ 02</span>
-                    <h2 class="font-bold text-slate-800 text-xs md:text-sm uppercase tracking-wide">Capítulo 1 do PGR — Dados da Unidade & Relatório de Visita</h2>
-                </div>
-                <span class="text-[11px] text-amber-900 bg-amber-100 px-2 py-0.5 rounded font-bold uppercase">1 por Estabelecimento / Secretaria</span>
-            </div>
-            <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nome da Unidade Inspecionada *</label>
-                    <input type="text" id="unidade_nome" placeholder="Ex: FÓRUM TRT / SECRETARIA DE SAÚDE" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); updateUnidadeBadge(); autoSave();">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">CNPJ da Unidade *</label>
-                    <input type="text" id="unidade_cnpj" placeholder="00.000.000/0001-00" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Telefone / Contato</label>
-                    <input type="text" id="unidade_tel" placeholder="(00) 00000-0000" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nome do Responsável da Unidade</label>
-                    <input type="text" id="unidade_resp" placeholder="Ex: DR. ROBERTO GUIMARÃES" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Cargo do Responsável</label>
-                    <input type="text" id="unidade_cargo_resp" placeholder="Ex: DIRETOR DE SECRETARIA / GESTOR" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Endereço Completo da Unidade</label>
-                    <input type="text" id="unidade_endereco" placeholder="Ex: ROD. NORTE SUL, S/N" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                </div>
-
-                <div class="md:col-span-3 border-t border-slate-200 pt-3 mt-1">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nome do Contato que acompanhou a vistoria *</label>
-                            <input type="text" id="unidade_contato" placeholder="NOME COMPLETO DE QUEM RECEBEU A EQUIPE" class="w-full bg-slate-50 border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase(); autoSave();">
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-[11px] font-bold text-slate-700 uppercase">Rúbrica do Contato na Tela:</span>
-                                <button type="button" onclick="clearSignature()" class="text-[10px] text-red-600 hover:text-red-800 font-bold flex items-center">
-                                    <i data-lucide="rotate-ccw" class="w-3 h-3 mr-1"></i> Limpar Rúbrica
-                                </button>
-                            </div>
-                            <canvas id="sig-canvas" class="signature-canvas w-full h-20 rounded shadow-inner"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- FORMULÁRIO DE ENTRADA DO SETOR -->
-        <section class="bg-white rounded-xl shadow border-2 border-blue-700 overflow-hidden">
-            <div class="bg-blue-900 text-white px-4 py-2.5 flex flex-wrap justify-between items-center gap-2">
-                <div class="flex items-center space-x-2">
-                    <span class="bg-amber-400 text-slate-950 text-[11px] font-black px-2 py-0.5 rounded">MATRIZ DO CAPÍTULO 15</span>
-                    <h2 class="font-extrabold text-xs md:text-sm tracking-wide uppercase">Entrada do Setor: GHE, Riscos, Medições e Plano de Ação</h2>
-                </div>
-                <div class="text-[11px] text-blue-200 font-medium">
-                    Preencha este setor e clique no botão verde abaixo para arquivar
-                </div>
-            </div>
-
-            <div class="p-4 space-y-4">
-                <!-- 1. GHE -->
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
-                    <div class="flex items-center justify-between border-b border-slate-200 pb-1.5">
-                        <span class="text-blue-950 font-bold text-xs uppercase flex items-center">
-                            <i data-lucide="layers" class="w-4 h-4 mr-1 text-blue-800"></i> 1. Grupo Homogêneo de Exposição (GHE) & Processo
-                        </span>
-                        <button type="button" onclick="startVoiceInput('cur_setor_processo')" class="text-xs bg-slate-200 hover:bg-slate-300 px-2 py-0.5 rounded text-slate-700 flex items-center">
-                            <i data-lucide="mic" class="w-3 h-3 text-blue-700 mr-1"></i> Ditar Processo
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nome do Setor ou da Unidade *</label>
-                            <input type="text" id="cur_setor_nome" placeholder="EX: SECRETARIA DA VARA / ALMOXARIFADO" class="w-full bg-white border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase();">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Processo Operacional / Processo de Trabalho *</label>
-                            <input type="text" id="cur_setor_processo" placeholder="EX: ATENDIMENTO AO PÚBLICO E DIGITAÇÃO" class="w-full bg-white border border-slate-300 rounded p-2 text-xs font-semibold uppercase" oninput="this.value = this.value.toUpperCase();">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. MEDIÇÕES AMBIENTAIS -->
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
-                    <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-1.5 gap-2">
-                        <span class="text-blue-950 font-bold text-xs uppercase flex items-center">
-                            <i data-lucide="activity" class="w-4 h-4 mr-1 text-emerald-600"></i> 2. Medições Ambientais (Ruído, Temp, Ilum, Umid)
-                        </span>
-                        <button type="button" onclick="addMeasurementRow()" class="text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded flex items-center shadow-sm">
-                            <i data-lucide="plus" class="w-3.5 h-3.5 mr-1"></i> + PONTO DE MEDIÇÃO
-                        </button>
-                    </div>
-                    <div id="measurements-container" class="space-y-1.5"></div>
-                </div>
-
-                <!-- 3. CARGOS -->
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
-                    <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-1.5 gap-2">
-                        <span class="text-blue-950 font-bold text-xs uppercase flex items-center">
-                            <i data-lucide="users" class="w-4 h-4 mr-1 text-blue-700"></i> 3. Cargos, Quantidade e Atividades
-                        </span>
-                        <button type="button" onclick="addCargoRow()" class="text-[11px] bg-blue-700 hover:bg-blue-800 text-white font-bold px-2.5 py-1 rounded flex items-center shadow-sm">
-                            <i data-lucide="user-plus" class="w-3.5 h-3.5 mr-1"></i> + ADICIONAR CARGO
-                        </button>
-                    </div>
-                    <div id="cargos-container" class="space-y-1.5"></div>
-                </div>
-
-                <!-- 4. RISCOS -->
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-3">
-                    <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-1.5 gap-2">
-                        <span class="text-blue-950 font-bold text-xs uppercase flex items-center">
-                            <i data-lucide="shield-alert" class="w-4 h-4 mr-1 text-amber-600"></i> 4. Inventário de Riscos Ocupacionais (159 Riscos) & Plano de Ação
-                        </span>
-                        <div class="flex items-center gap-1.5">
-                            <button type="button" onclick="openSmartVoiceRiskModal()" class="text-[11px] bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-2.5 py-1 rounded flex items-center shadow-sm">
-                                <i data-lucide="mic" class="w-3.5 h-3.5 mr-1 text-amber-300"></i> DITAR RISCO COMPLETO
-                            </button>
-                            <button type="button" onclick="addManualRisk()" class="text-[11px] bg-slate-700 hover:bg-slate-800 text-white font-bold px-2.5 py-1 rounded flex items-center shadow-sm">
-                                <i data-lucide="plus" class="w-3.5 h-3.5 mr-1"></i> + RISCO MANUAL
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- BARRAS DOS 6 GRUPOS DE RISCO -->
-                    <div class="bg-white p-2.5 rounded border border-slate-200 space-y-1.5">
-                        <span class="text-[10px] font-bold text-slate-700 uppercase block">Selecione o Grupo para abrir os Perigos na lista suspensa:</span>
-                        <div class="flex flex-wrap gap-1.5">
-                            <button type="button" onclick="filterRiskGroup('Físico')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">FÍSICO (42)</button>
-                            <button type="button" onclick="filterRiskGroup('Químico')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">QUÍMICO (11)</button>
-                            <button type="button" onclick="filterRiskGroup('Biológico')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">BIOLÓGICO (21)</button>
-                            <button type="button" onclick="filterRiskGroup('Ergonômico')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">ERGONÔMICO (29)</button>
-                            <button type="button" onclick="filterRiskGroup('Acidente')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">ACIDENTE (39)</button>
-                            <button type="button" onclick="filterRiskGroup('Psicossocial')" class="risk-group-btn bg-slate-100 hover:bg-blue-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">PSICOSSOCIAL (17)</button>
-                        </div>
-                    </div>
-
-                    <div id="risks-container" class="space-y-3"></div>
-
-                    <!-- RESPONSÁVEL DO PLANO -->
-                    <div class="bg-amber-50 border border-amber-200 rounded p-3 space-y-2">
-                        <div class="flex flex-wrap justify-between items-center gap-2">
-                            <label class="block text-[11px] font-bold text-amber-950 uppercase">Responsável pela Implementação do Plano de Ação deste Setor:</label>
-                            <button type="button" onclick="useSameResponsavel()" class="text-[10px] bg-amber-600 hover:bg-amber-700 text-white font-bold px-2 py-1 rounded shadow-sm">"O MESMO"</button>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-600 uppercase block">Nome do Responsável *</label>
-                                <input type="text" id="cur_setor_resp" placeholder="EX: DR. ROBERTO / GESTÃO" class="w-full bg-white border border-amber-300 rounded p-1.5 text-xs font-semibold uppercase">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-600 uppercase block">WhatsApp (Alertas)</label>
-                                <input type="text" id="cur_setor_resp_zap" placeholder="(19) 99156-7153" class="w-full bg-white border border-amber-300 rounded p-1.5 text-xs font-semibold">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-600 uppercase block">E-mail (Alertas)</label>
-                                <input type="text" id="cur_setor_resp_email" placeholder="responsavel@empresa.com.br" class="w-full bg-white border border-amber-300 rounded p-1.5 text-xs font-semibold">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- BOTÃO SALVAR SETOR -->
-                <div class="bg-slate-100 p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3">
-                    <div class="text-[11px] text-slate-600">
-                        <i data-lucide="check-circle" class="w-4 h-4 inline mr-1 text-emerald-600"></i>
-                        Ao salvar, este setor é arquivado e os campos ficam limpos para registrar o próximo sem poluição visual.
-                    </div>
-                    <button type="button" onclick="saveAndResetSector()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-6 py-2.5 rounded-lg shadow-md flex items-center justify-center text-xs uppercase whitespace-nowrap">
-                        <i data-lucide="save" class="w-4 h-4 mr-2"></i> SALVAR E ADICIONAR PRÓXIMO SETOR
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- LISTA DE SETORES SALVOS -->
-        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex justify-between items-center">
-                <h2 class="font-bold text-slate-800 text-xs md:text-sm uppercase">Setores Arquivados nesta Unidade (<span id="saved-sectors-count">0</span>)</h2>
-                <button type="button" onclick="openReviewModal()" class="text-xs text-blue-800 font-bold uppercase">Visualizar Matrizes</button>
-            </div>
-            <div class="p-3">
-                <div id="sectors-list-empty" class="text-center py-4 text-slate-400 text-xs uppercase">Nenhum setor adicionado ainda.</div>
-                <div id="sectors-list-container" class="space-y-1.5 hidden"></div>
-            </div>
-        </section>
-
-        <!-- CENTRAL DE EXPORTAÇÃO -->
-        <section class="bg-gradient-to-r from-blue-950 to-slate-900 rounded-xl shadow-xl p-5 text-white space-y-4">
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                <div>
-                    <h3 class="text-base md:text-lg font-black tracking-wide flex items-center gap-2 uppercase">
-                        <i data-lucide="file-output" class="w-5 h-5 text-amber-400"></i> CENTRAL DE EXPORTAÇÃO DO PGR (NR-01) — BOREAL ENGMED
-                    </h3>
-                    <p class="text-[11px] text-slate-300 mt-0.5">Escolha o formato de saída do seu documento técnico.</p>
-                </div>
-                <div class="flex flex-wrap gap-2 w-full lg:w-auto">
-                    <button type="button" onclick="baixarMatrizesWordUltraCompacto()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2.5 rounded-lg border border-slate-600 text-xs uppercase shadow">
-                        OPÇÃO 1: BAIXAR SÓ AS MATRIZES (.DOC)
-                    </button>
-                    <button type="button" onclick="gerarPGRCompletoWordDefinitivo()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-5 py-2.5 rounded-lg text-xs uppercase shadow-lg">
-                        OPÇÃO 2: GERAR PGR FINAL COMPLETO (.DOCX)
-                    </button>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- MODAIS -->
-    <div id="review-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden">
-            <div class="boreal-header text-white px-5 py-3 flex justify-between items-center">
-                <h3 class="font-extrabold text-sm uppercase">Matrizes Compactas PGR (Fonte Cambria)</h3>
-                <button type="button" onclick="closeReviewModal()" class="text-white font-bold text-lg">✕</button>
-            </div>
-            <div class="p-4 overflow-y-auto space-y-4" id="modal-tables-preview"></div>
-            <div class="bg-slate-100 p-3 flex justify-between items-center border-t">
-                <button type="button" onclick="copyModalContent()" class="bg-blue-900 text-white font-bold px-4 py-2 rounded text-xs uppercase">Copiar Tabelas</button>
-                <button type="button" onclick="closeReviewModal()" class="bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded text-xs uppercase">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="planos-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div class="bg-amber-600 text-white px-5 py-3 flex justify-between items-center">
-                <h3 class="font-extrabold text-sm uppercase">Gestão de Planos de Ação & Alertas</h3>
-                <button type="button" onclick="closePlanoAcaoManager()" class="text-white font-bold text-lg">✕</button>
-            </div>
-            <div class="p-4 overflow-y-auto space-y-3" id="planos-container-modal"></div>
-            <div class="bg-slate-100 p-3 flex justify-end border-t">
-                <button type="button" onclick="closePlanoAcaoManager()" class="bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded text-xs uppercase">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="vault-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden">
-            <div class="bg-indigo-900 text-white px-5 py-3 flex justify-between items-center">
-                <h3 class="font-extrabold text-sm uppercase">Arquivo Digital de Documentos (ART, Laudos, Ofícios)</h3>
-                <button type="button" onclick="closeDocsVaultModal()" class="text-white font-bold text-lg">✕</button>
-            </div>
-            <div class="p-4 overflow-y-auto space-y-4">
-                <div class="border-2 border-dashed border-indigo-200 rounded-xl p-4 text-center bg-indigo-50/50">
-                    <p class="text-xs font-bold text-indigo-950 uppercase mb-2">Anexar Documento Digital (ART, Ofício, Laudo)</p>
-                    <input type="file" id="vault-file-input" style="display:none;" onchange="handleVaultUpload(this)">
-                    <button type="button" onclick="document.getElementById('vault-file-input').click()" class="bg-indigo-700 text-white font-bold px-4 py-1.5 rounded text-xs uppercase">Selecionar Arquivo</button>
-                </div>
-                <div id="vault-list" class="space-y-2"></div>
-            </div>
-            <div class="bg-slate-100 p-3 flex justify-end border-t">
-                <button type="button" onclick="closeDocsVaultModal()" class="bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded text-xs uppercase">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="import-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden">
-            <div class="bg-emerald-700 text-white px-5 py-3 flex justify-between items-center">
-                <h3 class="font-extrabold text-sm uppercase">Importar Planilha do Cliente (.xlsx)</h3>
-                <button type="button" onclick="closeImportModal()" class="text-white font-bold text-lg">✕</button>
-            </div>
-            <div class="p-5 space-y-4 text-xs">
-                <p class="text-slate-600">Selecione uma planilha Excel contendo as colunas: Unidade, CNPJ, Setor e Cargo.</p>
-                <input type="file" id="xlsx-file-input" accept=".xlsx,.xls,.csv" style="display:none;" onchange="processUploadedExcel(this)">
-                <button type="button" onclick="document.getElementById('xlsx-file-input').click()" class="bg-emerald-600 text-white font-extrabold px-5 py-2 rounded uppercase shadow">Escolher Arquivo Excel</button>
-            </div>
-            <div class="bg-slate-100 p-3 flex justify-end border-t">
-                <button type="button" onclick="closeImportModal()" class="bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded text-xs uppercase">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="chat-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-            <div class="bg-teal-700 text-white px-5 py-3 flex justify-between items-center">
-                <h3 class="font-extrabold text-sm uppercase">Canal de Chat & Consultoria SST</h3>
-                <button type="button" onclick="closeChatModal()" class="text-white font-bold text-lg">✕</button>
-            </div>
-            <div class="p-4 flex-1 overflow-y-auto space-y-3" id="chat-messages-container" style="min-height: 250px;">
-                <div class="bg-slate-100 p-3 rounded text-xs text-slate-700 border">
-                    <strong class="text-teal-800 block">EQUIPE TÉCNICA BOREAL:</strong> Espaço para dúvidas técnicas da NR-01.
-                </div>
-            </div>
-            <div class="p-3 bg-slate-50 border-t flex gap-2">
-                <input type="text" id="chat-input" placeholder="DIGITE SUA DÚVIDA..." class="flex-1 border rounded p-2 text-xs uppercase font-semibold">
-                <button type="button" onclick="sendChatMessage()" class="bg-teal-700 text-white font-bold px-4 py-2 rounded text-xs uppercase">Enviar</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // BANCO DE RISCOS COMPLETO (159 RISCOS INTEGRADOS NATIVAMENTE)
-        const riskDatabaseGroups = {"Físico": [{"perigo": "TRABALHOS DE PESQUISAS E TESTES EM TELECOMUNICAÇÃO", "fonte": "", "risco": "INFRASSOM E SONS DE BAIXA FREQUÊNCIA", "propagacao": "VIBRAÇÃO MECÂNICA ATRAVÉS DO AR E ESTRUTURAS (RESSONÂNCIA CORPORAL)", "lesoes": "POSSÍVEL ALTERAÇÕES EM RADICAIS LIVRES, EFEITOS PSICOLÓGICOS", "severidade": "LEVE", "medidas": "", "plano": "IMPLEMENTAR ESTUDOS DE EFEITOS DE INFASSONS NA SAÚDE POUCO DIFUNDIDO", "prazo": "ATÉ 180 DIAS"}, {"perigo": "TRABALHOS COM FUNCIONAMENTO DE EQUIPAMENTOS, MÁQUINAS E VEÍCULOS", "fonte": "", "risco": "EFEITOS PREJUDICIAIS DO RUÍDO SOBRE O OUVIDO INTERNO", "propagacao": "VIA AÉREA (CANAL AUDITIVO) PARA O OUVIDO MÉDIO E FLUIDOS DA CÓCLEA", "lesoes": "SURDEZ TEMPORÁRIA, SURDEZ PERMANENTE, TRAUMA ACÚSTICO", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "FORNECER EQUPAIMENTO DE PROTEÇÃO AUDITIVA, TREINAMENTO DO USO DE EPI E FISCALIZAÇÃO DO USO DO EPI, COMO TMABÉM O MONIORAMENTO DA EXPOSIÇÃO E IMPLEMENTAÇÃO DE PPA.", "prazo": "ATÉ 30 DIAS"}, {"perigo": "PROCESSO DE PRODUÇÃO COM CHOQUE DE SUPERFÍCIES", "fonte": "", "risco": "RUÍDO IMPULSIVO OU DE IMPACTO", "propagacao": "TRANSFERÊNCIA SÚBITA DE ALTA ENERGIA (CHOQUE ACÚSTICO) AO SISTEMA AUDITIVO", "lesoes": "SURDEZ TEMPORÁRIA, SURDEZ PERMANENTE, TRAUMA ACÚSTICO", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "FORNECER EQUPAIMENTO DE PROTEÇÃO AUDITIVA, TREINAMENTO DO USO DE EPI E FISCALIZAÇÃO DO USO DO EPI, COMO TMABÉM O MONIORAMENTO DA EXPOSIÇÃO E IMPLEMENTAÇÃO DE PPA.", "prazo": "ATÉ 30 DIAS"}, {"perigo": "TRABALHOS EM TELECOMUNICAÇÕES NA EXISTÊNCIA DE ULTRASSOM DE ALTA FREQUENCIA", "fonte": "", "risco": "EFEITO A ADVERSOS PARA QUEM TEM UMA CONDIÇÃO FÍSICA DESFAVORÁVEL", "propagacao": "EXACERBAÇÃO SISTÊMICA (ESTRESSE METABÓLICO/FISIOLÓGICO) DE CONDIÇÕES PRÉ-EXISTENTES", "lesoes": "ZUMBIDO (TINNITUS): SENSAÇÃO DE APITO CONSTANTE NOS OUVIDOS APÓS A EXPOSIÇÃO. PERDA AUDITIVA TEMPORÁRIA: FADIGA DAS CÉLULAS CILIADAS DA CÓCLEA, QUE PODE SE TORNAR PERMANENTE COM A EXPOSIÇÃO PROLONGADA. DANOS AO LABIRINTO: PODE CAUSAR TONTURAS, NÁUSEAS E PERDA DE EQUILÍBRIO, JÁ QUE O SISTEMA VESTIBULAR É SENSÍVEL A VIBRAÇÕES DE ALTA FREQUÊNCIA.", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "FORNECER INFORMAÇÃO/ FORMAÇÃO/ INSTRUÇÕES AOS TRABALHADORES IMPLEMENTAR BLINDAGEM/ ISOLAMENTO COM CHAPA OU MALHA METÁLICA, CERÂMICA, PLÁSTICO OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE DOS CEM PROTEÇÃO COM CORTINAS DE LUZ, APARELHOS DE LEITURA E TAPETES SENSÍVEIS À PRESSÃO DISPOSITIVO DE CONTROLE.", "prazo": "ATÉ 30 DIAS"}, {"perigo": "TRABALHOS DE MANUTENÇÃO, PRODUÇÃO, FABRICAÇÃO, TELECOMUNICAÇÃO E TESTES E ANÁLISES LABORATORIAIS", "fonte": "", "risco": "CAMPOS MAGNÉTICOS ESTÁTICOS", "propagacao": "INTERAÇÃO COM ÍONS EM MOVIMENTO (SANGUE) E ESTRUTURAS DIAMAGNÉTICAS", "lesoes": "CEFALEIAS, ALTERAÇÕES NA CAPACIDADE DE CONCENTRAÇÃO, VERTIGEM, NÁUSEA, GOSTO METÁLICO E ALTERAÇÕES VISUAIS", "severidade": "LEVE", "medidas": "", "plano": "FORNECER INFORMAÇÃO/ FORMAÇÃO/ INSTRUÇÕES AOS TRABALHADORES IMPLEMENTAR BLINDAGEM/ ISOLAMENTO COM CHAPA OU MALHA METÁLICA, CERÂMICA, PLÁSTICO OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE DOS CEM PROTEÇÃO COM CORTINAS DE LUZ, APARELHOS DE LEITURA E TAPETES SENSÍVEIS À PRESSÃO DISPOSITIVO DE CONTROLE.", "prazo": "ATÉ 180 DIAS"}, {"perigo": "TRABALHOS DE MANUTENÇÃO, PRODUÇÃO, FABRICAÇÃO, TELECOMUNICAÇÃO E TESTES E ANÁLISES LABORATORIAIS", "fonte": "", "risco": "CAMPOS MAGNÉTICOS DE SUB-RADIOFREQUÊNCIA (30 KHZ E ABAIXO)", "propagacao": "INDUÇÃO DE CORRENTES ELÉTRICAS INTERNAS E CAMPOS ELÉTRICOS NOS TECIDOS", "lesoes": "NEOPLASIA MALIGNA DO ENCÉFALO", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "FORNECER INFORMAÇÃO/ FORMAÇÃO/ INSTRUÇÕES AOS TRABALHADORES IMPLEMENTAR BLINDAGEM/ ISOLAMENTO COM CHAPA OU MALHA METÁLICA, CERÂMICA, PLÁSTICO OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE DOS CEM PROTEÇÃO COM CORTINAS DE LUZ, APARELHOS DE LEITURA E TAPETES SENSÍVEIS À PRESSÃO DISPOSITIVO DE CONTROLE. OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE PROMOVER INFORMAÇÕES SOBRE O AGENTE E SUAS REPERCUSSÕES, FORNECER ÓCULOS DE PROTEÇÃO E/OU MÁSCARA DE SOLDA", "prazo": "ATÉ 30 DIAS"}, {"perigo": "TRABALHOS DE MANUTENÇÃO, PRODUÇÃO, FABRICAÇÃO, TELECOMUNICAÇÃO E TESTES E ANÁLISES LABORATORIAIS", "fonte": "", "risco": "SUB-RADIOFREQUÊNCIA (30 KHZ E ABAIXO) E CAMPOS ELETROSTÁTICOS", "propagacao": "INDUÇÃO DE CAMPOS E CORRENTES ELÉTRICAS POR ACOPLAMENTO DIRETO OU DESCARGA", "lesoes": "CATARATAS, OUTRAS, QUEIMADURAS", "severidade": "GRAVE REVERSÍVEL", "medidas": "", "plano": "FORNECER INFORMAÇÃO/ FORMAÇÃO/ INSTRUÇÕES AOS TRABALHADORES IMPLEMENTAR BLINDAGEM/ ISOLAMENTO COM CHAPA OU MALHA METÁLICA, CERÂMICA, PLÁSTICO OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE DOS CEM PROTEÇÃO COM CORTINAS DE LUZ, APARELHOS DE LEITURA E TAPETES SENSÍVEIS À PRESSÃO DISPOSITIVO DE CONTROLE. OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE PROMOVER INFORMAÇÕES SOBRE O AGENTE E SUAS REPERCUSSÕES, FORNECER ÓCULOS DE PROTEÇÃO E/OU MÁSCARA DE SOLDA", "prazo": "ATÉ 60 DIAS"}, {"perigo": "TRABALHOS DE MANUTENÇÃO, PRODUÇÃO, FABRICAÇÃO, TELECOMUNICAÇÃO E TESTES E ANÁLISES LABORATORIAIS", "fonte": "", "risco": "RADIAÇÃO DE RADIOFREQUÊNCIA E MICRO-ONDAS", "propagacao": "ABSORÇÃO DE ENERGIA ELETROMAGNÉTICA CONVERTIDA EM EFEITO TÉRMICO (AQUECIMENTO)", "lesoes": "QUEIMADURAS PROFUNDAS: EXPOSIÇÃO A ALTOS NÍVEIS DE RF/MICRO-ONDAS (COMO EM AMBIENTES INDUSTRIAIS, RADARES DE ALTA POTÊNCIA OU VAZAMENTOS DE FORNOS DE MICRO-ONDAS) PODE CAUSAR QUEIMADURAS NOS TECIDOS INTERNOS, SEM NECESSARIAMENTE QUEIMAR A PELE, POIS A ENERGIA É ABSORVIDA INTERNAMENTE. DANOS A ÓRGÃOS COM BAIXO FLUXO SANGUÍNEO: ÓRGÃOS QUE NÃO CONSEGUEM DISSIPAR BEM O CALOR (POR TEREM POUCO SUPRIMENTO SANGUÍNEO) SÃO MAIS VULNERÁVEIS: OLHOS: O CRISTALINO DO OLHO, QUE NÃO POSSUI VASOS SANGUÍNEOS PARA RESFRIAMENTO, É O MAIS SUSCETÍVEL. A EXPOSIÇÃO INTENSA PODE CAUSAR CATARATA (OPACIFICAÇÃO DO CRISTALINO) DEVIDO À COAGULAÇÃO DE PROTEÍNAS PELO CALOR. TESTÍCULOS: O AUMENTO DA TEMPERATURA PODE AFETAR A PRODUÇÃO E A VIABILIDADE DOS ESPERMATOZOIDES, POTENCIALMENTE CAUSANDO INFERTILIDADE TEMPORÁRIA OU PERMANENTE. ESTRESSE TÉRMICO SISTÊMICO: EM CASOS DE EXPOSIÇÃO CORPORAL TOTAL DE ALTA INTENSIDADE, O CORPO PODE SOFRER UM AUMENTO PERIGOSO DA TEMPERATURA CORPORAL, LEVANDO A UM GOLPE DE CALOR OU HIPERTERMIA.", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "FORNECER INFORMAÇÃO/ FORMAÇÃO/ INSTRUÇÕES AOS TRABALHADORES IMPLEMENTAR BLINDAGEM/ ISOLAMENTO COM CHAPA OU MALHA METÁLICA, CERÂMICA, PLÁSTICO OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE DOS CEM PROTEÇÃO COM CORTINAS DE LUZ, APARELHOS DE LEITURA E TAPETES SENSÍVEIS À PRESSÃO DISPOSITIVO DE CONTROLE. OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE PROMOVER INFORMAÇÕES SOBRE O AGENTE E SUAS REPERCUSSÕES, FORNECER ÓCULOS DE PROTEÇÃO E/OU MÁSCARA DE SOLDA", "prazo": "ATÉ 30 DIAS"}, {"perigo": "TRABALHOS DE MANUTENÇÃO, PRODUÇÃO, FABRICAÇÃO, TELECOMUNICAÇÃO E TESTES E ANÁLISES LABORATORIAIS", "fonte": "", "risco": "RADIAÇÃO VISÍVEL E INFRAVERMELHO PRÓXIMO", "propagacao": "ABSORÇÃO TÉRMICA PELOS TECIDOS OCULARES E PELE (ESPECIALMENTE RETINA E CÓRNEA)", "lesoes": "CERATOCONJUNTIVITE CATARATAS, OUTRAS OUTROS TRANSTORNOS DO CRISTALINO", "severidade": "GRAVE REVERSÍVEL", "medidas": "", "plano": "FORNECER INFORMAÇÃO/ FORMAÇÃO/ INSTRUÇÕES AOS TRABALHADORES IMPLEMENTAR BLINDAGEM/ ISOLAMENTO COM CHAPA OU MALHA METÁLICA, CERÂMICA, PLÁSTICO OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE DOS CEM PROTEÇÃO COM CORTINAS DE LUZ, APARELHOS DE LEITURA E TAPETES SENSÍVEIS À PRESSÃO DISPOSITIVO DE CONTROLE. OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE PROMOVER INFORMAÇÕES SOBRE O AGENTE E SUAS REPERCUSSÕES, FORNECER ÓCULOS DE PROTEÇÃO E/OU MÁSCARA DE SOLDA", "prazo": "ATÉ 60 DIAS"}, {"perigo": "TRABALHOS DE SOLDAGEM", "fonte": "", "risco": "RADIAÇÃO ULTRAVIOLETA", "propagacao": "ABSORÇÃO FOTOQUÍMICA NA PELE E OLHOS (CAUSANDO DANO AO DNA CELULAR/QUERATITE)", "lesoes": "DANOS OCULARES CERATOCONJUNTIVITE FOTOELÉTRICA (ARCO DE SOLDA): É O DANO MAIS COMUM E AGUDO. A EXPOSIÇÃO À UVC OU UVB CAUSA UMA INFLAMAÇÃO DOLOROSA DA CÓRNEA (CERATITE) E DA CONJUNTIVA, GERALMENTE 6 A 12 HORAS APÓS A EXPOSIÇÃO. SINTOMAS: DOR INTENSA, SENSAÇÃO DE AREIA NOS OLHOS E FOTOFOBIA (SENSIBILIDADE À LUZ). CATARATA: A EXPOSIÇÃO CRÔNICA AO UVB E UVA ACELERA A OPACIFICAÇÃO DO CRISTALINO, LEVANDO À CATARATA. PTERÍGIO E PINGUÉCULA: CRESCIMENTOS ANORMAIS NA CONJUNTIVA, ASSOCIADOS À EXPOSIÇÃO SOLAR CRÔNICA.", "severidade": "GRAVE REVERSÍVEL", "medidas": "", "plano": "FORNECER INFORMAÇÃO/ FORMAÇÃO/ INSTRUÇÕES AOS TRABALHADORES IMPLEMENTAR BLINDAGEM/ ISOLAMENTO COM CHAPA OU MALHA METÁLICA, CERÂMICA, PLÁSTICO OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE DOS CEM PROTEÇÃO COM CORTINAS DE LUZ, APARELHOS DE LEITURA E TAPETES SENSÍVEIS À PRESSÃO DISPOSITIVO DE CONTROLE. OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE PROMOVER INFORMAÇÕES SOBRE O AGENTE E SUAS REPERCUSSÕES, FORNECER ÓCULOS DE PROTEÇÃO E/OU MÁSCARA DE SOLDA", "prazo": "ATÉ 60 DIAS"}, {"perigo": "PROCESSOS INDUSTRIAS E LABORATORIAIS COM RAIO LASER", "fonte": "", "risco": "IRADIAÇÃO DE RAIO LASERS", "propagacao": "FEIXE COLIMADO DE ALTA DENSIDADE DE ENERGIA CAUSANDO LESÃO TÉRMICA OU FOTOABLAÇÃO", "lesoes": "QUEIMADURA DA RETINA: A RADIAÇÃO VISÍVEL E INFRAVERMELHA PRÓXIMA (400 NM A 1400 NM) É ABSORVIDA PELA RETINA. A EXPOSIÇÃO CAUSA UM AUMENTO DE TEMPERATURA QUE PODE LEVAR À FOTOCOAGULAÇÃO E À DESTRUIÇÃO DAS CÉLULAS FOTORRECEPTORAS. CONSEQUÊNCIA: PERDA DE VISÃO IMEDIATA E PERMANENTE (MANCHA ESCURA NO CAMPO VISUAL), CEGUEIRA PARCIAL OU TOTAL. LESÃO DE CÓRNEA E CRISTALINO: RADIAÇÃO ULTRAVIOLETA E INFRAVERMELHA DISTANTE (QUE NÃO É FOCADA NA RETINA) É ABSORVIDA PELAS CAMADAS ANTERIORES DO OLHO. CONSEQUÊNCIA: CATARATA (OPACIFICAÇÃO DO CRISTALINO) E CERATITE (INFLAMAÇÃO E DOR NA CÓRNEA).", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "FORNECER INFORMAÇÃO/ FORMAÇÃO/ INSTRUÇÕES AOS TRABALHADORES IMPLEMENTAR BLINDAGEM/ ISOLAMENTO COM CHAPA OU MALHA METÁLICA, CERÂMICA, PLÁSTICO OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE DOS CEM PROTEÇÃO COM CORTINAS DE LUZ, APARELHOS DE LEITURA E TAPETES SENSÍVEIS À PRESSÃO DISPOSITIVO DE CONTROLE. OU VIDRO, BLOQUEIO DE ACESSO À PROXIMIDADE DA FONTE PROMOVER INFORMAÇÕES SOBRE O AGENTE E SUAS REPERCUSSÕES, FORNECER ÓCULOS DE PROTEÇÃO E/OU MÁSCARA DE SOLDA", "prazo": "ATÉ 30 DIAS"}, {"perigo": "TRABALHOS COM SUBSTÂNCIAS E MATERIAIS RADIOATIVOS EM EMBALAGENS, EQUIPAMENTOS E APARELHOS", "fonte": "", "risco": "CONTAMINAÇÃO PELA FUGA DE RADIAÇÃO POR ACIDENTE EM CASOS DE FALHA NA BLINDAGEM DA EMBALAGEM, FUSILAGEM DA MÁQUINA, EQUIPAMENTO, APARELHO OU CONTENÇÃO", "propagacao": "DISPERSÃO AMBIENTAL (AR/SUPERFÍCIE) DE MATERIAL RADIOATIVO APÓS PERDA DE INTEGRIDADE", "lesoes": "LEUCEMIA, CÂNCER DE TIREOIDE CÂNCER DE PULMÃO (ESPECIALMENTE COM RADÔNIO) CÂNCER DE MAMA CÂNCER DE PELE (NÃOMELANOMA) CÂNCER DE ESTÔMAGO, FÍGADO E OSSOS", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "MANTER NO LOCAL DE TRABALHO E À DISPOSIÇÃO DE INSPEÇÕES O PLANO DE PROTEÇÃO RADIOLÓGICA (PPR) PROVADO PELA CNEN E PELA VIGILÂNCIA SANITÁRIA PARA OS CASOS DE RADIODIAGNÓSTICO. ENTRE DIVERSAS FINALIDADES, O PPR DEVE: – SER PERSONALIZADO PARA A INSTALAÇÃO, AMBIENTES, EQUIPAMENTOS, PROCEDIMENTOS E ROTINA OPERACIONAL E ETC.; AS ÁREAS DA INSTALAÇÃO RADIATIVA DEVEM SER CLASSIFICADAS, SINALIZADAS E TER ACESSO CONTROLADO.", "prazo": "ATÉ 30 DIAS"}, {"perigo": "SUBSTÂNCIAS E MATERIAIS RADIOATIVOS COM EXPOSIÇÃO ACIMA DOS LIMITES DE DOSES DE RADIAÇÃO FETIVA OU EQUIVALENTE", "fonte": "", "risco": "CONTAMINAÇÃO COM RADIAÇÕES IONIZANTES", "propagacao": "EXPOSIÇÃO EXTERNA OU INTERNA (INALAÇÃO/INGESTÃO/FERIMENTOS) A FONTES RADIOATIVAS", "lesoes": "POLINEUROPATIAS ESPECIFICADAS, OUTRAS", "severidade": "LEVE", "medidas": "", "plano": "COMUNICAR A CNEN SOBRE O LIMITE EXCEDIDO DE RADIAÇÃO, REALIZAR EXAMES DO PCMSO", "prazo": "ATÉ 180 DIAS"}, {"perigo": "TRABALHOS COM FERRAMENTAS E MÁQUINAS OU DIREÇÃO DE VEÍCULOS", "fonte": "", "risco": "VIBRAÇÕES LOCALIZADAS NAS MÃOS E BRAÇOS", "propagacao": "TRANSMISSÃO MECÂNICA POR CONTATO DIRETO COM SUPERFÍCIES VIBRATÓRIAS (FERRAMENTAS)", "lesoes": "TRANSTORNOS DE DISCOS INTERVERTEBRAIS, OUTROS", "severidade": "LEVE", "medidas": "", "plano": "REALIZAR REVEZAMENTO DE EQUIPE DE TRABALHO, REALIZAR A MANUTENÇÃO PERIÓDICA DE MÁQUINAS E EQUIPAMENTOS, PARA MINIMIZAR A VIBRAÇÃO; TREINAR A EQUIPE SOBRE O CORRETO USO DOS EQUIPAMENTOS VISANDO MINIMIZAR A VIBRAÇÃO", "prazo": "ATÉ 180 DIAS"}, {"perigo": "TRABALHOS COM FERRAMENTAS E MÁQUINAS OU VEÍCULOS", "fonte": "", "risco": "VIBRAÇÃO DE CORPO INTEIRO", "propagacao": "TRANSFERÊNCIA DE ENERGIA VIBRATÓRIA ATRAVÉS DE SUPERFÍCIES DE SUPORTE (ASSENTOS/PISO)", "lesoes": "ARTROSES, OUTRAS, SÍNDROME CERVICOBRAQUIAL", "severidade": "LEVE", "medidas": "", "plano": "REALIZAR REVEZAMENTO DE EQUIPE DE TRABALHO, REALIZAR A MANUTENÇÃO PERIÓDICA DE MÁQUINAS E EQUIPAMENTOS, PARA MINIMIZAR A VIBRAÇÃO; TREINAR A EQUIPE SOBRE O CORRETO USO DOS EQUIPAMENTOS VISANDO MINIMIZAR A VIBRAÇÃO", "prazo": "ATÉ 180 DIAS"}, {"perigo": "TRABALHOS EM CÉU ABERTO OU EM PROCESSOS INTERNOS MEDIANTE A CHAMA DE FOGO OU VAPORES QUENTES", "fonte": "", "risco": "ESTRESSE E SOBRECARGA FISIOLÓGICA POR CALOR", "propagacao": "DESEQUILÍBRIO TÉRMICO (GANHO DE CALOR SUPERIOR À PERDA) POR VIA AÉREA E RADIAÇÃO", "lesoes": "FRAQUEZA EXTREMA, TONTURA, SUOR EXCESSIVO, PELE FRIA E ÚMIDA, DOR DE CABEÇA, NÁUSEAS E VÔMITOS , QUEDA DE PRESSÃO ARTERIAL, DESMAIOS (SÍNCOPE POR CALOR", "severidade": "MODERADA", "medidas": "", "plano": "PROMOVER VENTILAÇÃO E CIRCULAÇÃO DE AR, DISPONIBILIZAR E INCENTIVAR O CONSUMO DE ÁGUA", "prazo": "ATÉ 90 DIAS"}, {"perigo": "TRABALHO EM BAIXAS ALTITUDES, EM CÂMARAS, TUBULÕES OU EM ÁGUAS PROFUNDAS.", "fonte": "", "risco": "PRESSÃO HIPERBÁRICA, MUDANÇAS NA COMPOSIÇÃO DE GASES DOS PULMÕES.", "propagacao": "AUMENTO DA PRESSÃO PARCIAL DE GASES (EX: NITROGÊNIO) DISSOLVIDOS NO SANGUE E TECIDOS", "lesoes": "OTITE MÉDIA NÃO- SUPURATIVA, NÃO ESPECIFICADA, SINUSITE BAROTRAUMÁTICA", "severidade": "LEVE", "medidas": "", "plano": "MANTER O MONITORAMENTO PELA REALIZAÇÃO DOS EXAMES COMPLEMENTARES", "prazo": "ATÉ 180 DIAS"}, {"perigo": "TRABALHO EM BAIXAS ALTITUDES, EM CÂMARAS, TUBULÕES OU EM ÁGUAS PROFUNDAS.", "fonte": "", "risco": "PRESSÃO HIPERBÁRICA, MUDANÇAS NA COMPOSIÇÃO DE GASES DOS PULMÕES.", "propagacao": "AUMENTO DA PRESSÃO PARCIAL DE GASES (EX: NITROGÊNIO) DISSOLVIDOS NO SANGUE E TECIDOS", "lesoes": "OTITE MÉDIA NÃO- SUPURATIVA, NÃO ESPECIFICADA, SINUSITE BAROTRAUMÁTICA", "severidade": "LEVE", "medidas": "", "plano": "MANTER O MONITORAMENTO PELA REALIZAÇÃO DOS EXAMES COMPLEMENTARES", "prazo": "ATÉ 180 DIAS"}, {"perigo": "TRABALHOS EM ALTAS ALTITUDES, COMO AVIÕES, MONTANHAS E REGIÕES ELEVADAS.", "fonte": "", "risco": "PRESSÃO HIPOBÁRICA", "propagacao": "DIMINUIÇÃO DA PRESSÃO ATMOSFÉRICA REDUZINDO A PRESSÃO PARCIAL DE OXIGÊNIO (HIPÓXIA)", "lesoes": "MAL DOS CAIXÕES [DOENÇA DE DESCOMPRESSÃO] FALTA DE AR, TONTURAS, NÁUSEAS E DORES DE CABEÇA, LABIRINTITE E HIPÓXIA", "severidade": "MODERADA", "medidas": "", "plano": "PROPOR INGESTÃO DE MUITA ÁGUA E USO DE BOMBAS DE OXIGÊNIO, MANTER O MONITORAMENTO PELA REALIZAÇÃO DOS EXAMES COMPLEMENTARES", "prazo": "ATÉ 90 DIAS"}, {"perigo": "TRABALHOS EM ALTAS ALTITUDES, COMO AVIÕES, MONTANHAS E REGIÕES ELEVADAS.", "fonte": "", "risco": "PRESSÃO HIPOBÁRICA", "propagacao": "DIMINUIÇÃO DA PRESSÃO ATMOSFÉRICA REDUZINDO A PRESSÃO PARCIAL DE OXIGÊNIO (HIPÓXIA)", "lesoes": "MAL DOS CAIXÕES [DOENÇA DE DESCOMPRESSÃO] FALTA DE AR, TONTURAS, NÁUSEAS E DORES DE CABEÇA, LABIRINTITE E HIPÓXIA", "severidade": "MODERADA", "medidas": "", "plano": "PROPOR INGESTÃO DE MUITA ÁGUA E USO DE BOMBAS DE OXIGÊNIO, MANTER O MONITORAMENTO PELA REALIZAÇÃO DOS EXAMES COMPLEMENTARES", "prazo": "ATÉ 90 DIAS"}, {"perigo": "TRABALHOS COM LAVAGENS OU EM CULTURAS DE LAVOURAS OU DENTRO D’ÁGUA", "fonte": "", "risco": "UMIDADE NO CORPO", "propagacao": "INTERFERÊNCIA NA TERMORREGULAÇÃO (EVAPORAÇÃO DO SUOR) E CONTATO DIRETO PELE/SUPERFÍCIE", "lesoes": "AFECÇÕES DAS UNHAS", "severidade": "LEVE", "medidas": "", "plano": "FORNECIMENTO DE MACACÃO IMPERMEÁVEL", "prazo": "ATÉ 180 DIAS"}, {"perigo": "TRABALHOS EM FRIGORÍFICOS E CÂMARAS DE REFRIGERAÇÃO", "fonte": "", "risco": "ESTRESSE POR FRIO (HIPOTERMIA)", "propagacao": "PERDA EXCESSIVA DE CALOR CORPORAL PARA O AMBIENTE POR CONDUÇÃO, CONVECÇÃO E RADIAÇÃO", "lesoes": "URTICÁRIA DEVIDA A FRIO, SÍNDROME DE RAYNAUD, GELADURA SUPERFICIAL", "severidade": "MODERADA", "medidas": "", "plano": "FORNECIMENTO DE JAQUETA, CALÇA E BOTA E REVEZAMENTO DE EQUIPE DE TRABALHO", "prazo": "ATÉ 90 DIAS"}, {"perigo": "RUÍDO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "RUÍDO: ABAIXO DO NÍVEL DE AÇÃO", "propagacao": "VIA AÉREA E CANAL AUDITIVO", "lesoes": "ZUMBIDO, FADIGA AUDITIVA E PERDA AUDITIVA INDUZIDA POR RUÍDO", "severidade": "LEVE", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 180 DIAS"}, {"perigo": "RUÍDO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "RUÍDO: NO NÍVEL DE AÇÃO", "propagacao": "VIA AÉREA E CANAL AUDITIVO", "lesoes": "ZUMBIDO, FADIGA AUDITIVA E PERDA AUDITIVA INDUZIDA POR RUÍDO", "severidade": "MODERADA", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 90 DIAS"}, {"perigo": "RUÍDO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "RUÍDO: ACIMA DO NÍVEL DE AÇÃO E ABAIXO DO LIMITE DE TOLERÂNCIA", "propagacao": "VIA AÉREA E CANAL AUDITIVO", "lesoes": "ZUMBIDO, FADIGA AUDITIVA E PERDA AUDITIVA INDUZIDA POR RUÍDO", "severidade": "GRAVE REVERSÍVEL", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 60 DIAS"}, {"perigo": "RUÍDO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "RUÍDO: ACIMA DO LIMITE DE TOLERÂNCIA", "propagacao": "VIA AÉREA E CANAL AUDITIVO", "lesoes": "ZUMBIDO, FADIGA AUDITIVA E PERDA AUDITIVA INDUZIDA POR RUÍDO", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 30 DIAS"}, {"perigo": "CALOR — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "CALOR: ABAIXO DO NÍVEL DE AÇÃO", "propagacao": "IRRADIAÇÃO, CONVECÇÃO, CONDUÇÃO E ESFORÇO METABÓLICO", "lesoes": "DESIDRATAÇÃO, EXAUSTÃO TÉRMICA, CÂIMBRAS E GOLPE DE CALOR", "severidade": "LEVE", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 180 DIAS"}, {"perigo": "CALOR — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "CALOR: NO NÍVEL DE AÇÃO", "propagacao": "IRRADIAÇÃO, CONVECÇÃO, CONDUÇÃO E ESFORÇO METABÓLICO", "lesoes": "DESIDRATAÇÃO, EXAUSTÃO TÉRMICA, CÂIMBRAS E GOLPE DE CALOR", "severidade": "MODERADA", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 90 DIAS"}, {"perigo": "CALOR — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "CALOR: ACIMA DO NÍVEL DE AÇÃO E ABAIXO DO LIMITE DE TOLERÂNCIA", "propagacao": "IRRADIAÇÃO, CONVECÇÃO, CONDUÇÃO E ESFORÇO METABÓLICO", "lesoes": "DESIDRATAÇÃO, EXAUSTÃO TÉRMICA, CÂIMBRAS E GOLPE DE CALOR", "severidade": "GRAVE REVERSÍVEL", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 60 DIAS"}, {"perigo": "CALOR — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "CALOR: ACIMA DO LIMITE DE TOLERÂNCIA", "propagacao": "IRRADIAÇÃO, CONVECÇÃO, CONDUÇÃO E ESFORÇO METABÓLICO", "lesoes": "DESIDRATAÇÃO, EXAUSTÃO TÉRMICA, CÂIMBRAS E GOLPE DE CALOR", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 30 DIAS"}, {"perigo": "VIBRAÇÃO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "VIBRAÇÃO: ABAIXO DO NÍVEL DE AÇÃO", "propagacao": "CONTATO MECÂNICO DIRETO COM MÃOS, BRAÇOS OU CORPO INTEIRO", "lesoes": "ALTERAÇÕES VASCULARES, NEUROLÓGICAS E OSTEOMUSCULARES", "severidade": "LEVE", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 180 DIAS"}, {"perigo": "VIBRAÇÃO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "VIBRAÇÃO: NO NÍVEL DE AÇÃO", "propagacao": "CONTATO MECÂNICO DIRETO COM MÃOS, BRAÇOS OU CORPO INTEIRO", "lesoes": "ALTERAÇÕES VASCULARES, NEUROLÓGICAS E OSTEOMUSCULARES", "severidade": "MODERADA", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 90 DIAS"}, {"perigo": "VIBRAÇÃO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "VIBRAÇÃO: ACIMA DO NÍVEL DE AÇÃO E ABAIXO DO LIMITE DE TOLERÂNCIA", "propagacao": "CONTATO MECÂNICO DIRETO COM MÃOS, BRAÇOS OU CORPO INTEIRO", "lesoes": "ALTERAÇÕES VASCULARES, NEUROLÓGICAS E OSTEOMUSCULARES", "severidade": "GRAVE REVERSÍVEL", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 60 DIAS"}, {"perigo": "VIBRAÇÃO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "VIBRAÇÃO: ACIMA DO LIMITE DE TOLERÂNCIA", "propagacao": "CONTATO MECÂNICO DIRETO COM MÃOS, BRAÇOS OU CORPO INTEIRO", "lesoes": "ALTERAÇÕES VASCULARES, NEUROLÓGICAS E OSTEOMUSCULARES", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 30 DIAS"}, {"perigo": "FRIO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "FRIO: ABAIXO DO NÍVEL DE AÇÃO", "propagacao": "CONVECÇÃO, CONDUÇÃO E CONTATO COM SUPERFÍCIES FRIAS", "lesoes": "HIPOTERMIA, LESÕES CUTÂNEAS E REDUÇÃO DE DESTREZA", "severidade": "LEVE", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 180 DIAS"}, {"perigo": "FRIO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "FRIO: NO NÍVEL DE AÇÃO", "propagacao": "CONVECÇÃO, CONDUÇÃO E CONTATO COM SUPERFÍCIES FRIAS", "lesoes": "HIPOTERMIA, LESÕES CUTÂNEAS E REDUÇÃO DE DESTREZA", "severidade": "MODERADA", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 90 DIAS"}, {"perigo": "FRIO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "FRIO: ACIMA DO NÍVEL DE AÇÃO E ABAIXO DO LIMITE DE TOLERÂNCIA", "propagacao": "CONVECÇÃO, CONDUÇÃO E CONTATO COM SUPERFÍCIES FRIAS", "lesoes": "HIPOTERMIA, LESÕES CUTÂNEAS E REDUÇÃO DE DESTREZA", "severidade": "GRAVE REVERSÍVEL", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 60 DIAS"}, {"perigo": "FRIO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "FRIO: ACIMA DO LIMITE DE TOLERÂNCIA", "propagacao": "CONVECÇÃO, CONDUÇÃO E CONTATO COM SUPERFÍCIES FRIAS", "lesoes": "HIPOTERMIA, LESÕES CUTÂNEAS E REDUÇÃO DE DESTREZA", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 30 DIAS"}, {"perigo": "RADIAÇÃO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "RADIAÇÃO: ABAIXO DO NÍVEL DE AÇÃO", "propagacao": "EXPOSIÇÃO POR IRRADIAÇÃO OU CAMPO ELETROMAGNÉTICO", "lesoes": "LESÕES CUTÂNEAS E OCULARES, EFEITOS TÉRMICOS OU BIOLÓGICOS CONFORME O AGENTE", "severidade": "LEVE", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 180 DIAS"}, {"perigo": "RADIAÇÃO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "RADIAÇÃO: NO NÍVEL DE AÇÃO", "propagacao": "EXPOSIÇÃO POR IRRADIAÇÃO OU CAMPO ELETROMAGNÉTICO", "lesoes": "LESÕES CUTÂNEAS E OCULARES, EFEITOS TÉRMICOS OU BIOLÓGICOS CONFORME O AGENTE", "severidade": "MODERADA", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 90 DIAS"}, {"perigo": "RADIAÇÃO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "RADIAÇÃO: ACIMA DO NÍVEL DE AÇÃO E ABAIXO DO LIMITE DE TOLERÂNCIA", "propagacao": "EXPOSIÇÃO POR IRRADIAÇÃO OU CAMPO ELETROMAGNÉTICO", "lesoes": "LESÕES CUTÂNEAS E OCULARES, EFEITOS TÉRMICOS OU BIOLÓGICOS CONFORME O AGENTE", "severidade": "GRAVE REVERSÍVEL", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 60 DIAS"}, {"perigo": "RADIAÇÃO — AVALIAÇÃO QUANTITATIVA", "fonte": "", "risco": "RADIAÇÃO: ACIMA DO LIMITE DE TOLERÂNCIA", "propagacao": "EXPOSIÇÃO POR IRRADIAÇÃO OU CAMPO ELETROMAGNÉTICO", "lesoes": "LESÕES CUTÂNEAS E OCULARES, EFEITOS TÉRMICOS OU BIOLÓGICOS CONFORME O AGENTE", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "REALIZAR AVALIAÇÃO QUANTITATIVA, ADOTAR CONTROLES NA FONTE E NO AMBIENTE, SINALIZAR A ÁREA, FORNECER EPI ADEQUADO, CAPACITAR TRABALHADORES E MONITORAR A EFICÁCIA.", "prazo": "ATÉ 30 DIAS"}], "Químico": [{"perigo": "ATIVIDADES EM PRESENÇA DE GASES OU VAPORES DE AGENTES QUÍMICOS ABAIXO DO NÍVEL DE AÇÃO OU CONTATO MANUAL COM PRODUTOS QUÍMICOS EM QUANTIDADES ÍNFIMAS SEM RELEVÂNCIA EM RELAÇÃO A DANOS BIOLÓGICOS", "fonte": "", "risco": "CONTATO (PELE), INALAÇÃO (RESPIRAÇÃO) DA SUBSTÂNCIA POR UM INDIVÍDUO SENSIBILIZADO.", "propagacao": "INALAÇÃO DE PARTÍCULAS, FUMOS, GASES, VAPORES OU AEROSSÓIS", "lesoes": "DANOS DERMATOLÓGICOS (PELE) DANOS: URTICÁRIA (PLACAS VERMELHAS QUE COÇAM), DERMATITE DE CONTATO, ECZEMA E ANGIOEDEMA (INCHAÇO PROFUNDO SOB A PELE, GERALMENTE NAS PÁLPEBRAS E LÁBIOS). 2. DANOS RESPIRATÓRIOS DANOS: RINITE ALÉRGICA (ESPIRROS E CORIZA), ASMA OCUPACIONAL (ESTREITAMENTO DAS VIAS AÉREAS COM CHIADO NO PEITO), DISPNEIA (FALTA DE AR) E EDEMA DE GLOTE (INCHAÇO DA GARGANTA QUE IMPEDE A PASSAGEM DO AR). 3. DANOS OCULARES DANOS: CONJUNTIVITE ALÉRGICA, VERMELHIDÃO INTENSA, LACRIMEJAMENTO EXCESSIVO E FOTOFOBIA (DOR AO OLHAR PARA A LUZ). 4. DANOS SISTÊMICOS GRAVES POR ALERGIA (CHOQUE ANAFILÁTICO) QUEDA BRUSCA DA PRESSÃO ARTERIAL (CHOQUE), ARRITMIA CARDÍACA, DESMAIO E PARADA CARDIORRESPIRATÓRIA.", "severidade": "CRÍTICA/ FATAL", "medidas": "", "plano": "FORNECER EQUIPAMENTO DE PROTEÇÃO PARA TRABALHADORES COM REAÇÕES ALÉGICAS PROMOVER CURSO SOBRE MANIPULAÇÃO DE PRODUTOS QUÍMICOS, MANIPULAR PRODUTOS EM AMBIENTES QUE NÃO SEJAM CONFINADOS, IMPLANTAR CHUVEIROS LAVA OLHOS PARA CASOS DE ACIDENTES DE DERRAMAMENTO DE PRODUTOS QUÍMICOS.", "prazo": "IMEDIATO"}, {"perigo": "ATIVIDADES EM CONTATO MANUAL COM PRODUTOS QUÍMICOS DE FORMA INTENSA EM GRANDE QUANTIDADE", "fonte": "", "risco": "ABSORÇÃO DA SUBSTÂNCIA QUÍMICA PELA PELE E OLHOS", "propagacao": "CONTATO CUTÂNEO E OCULAR; INALAÇÃO DE VAPORES OU AEROSSÓIS", "lesoes": "ANEMIA APLÁSTICA DEVIDA A OUTROS AGENTES EXTERNOS ANEMIA APLÁSTICA NÃO ESPECIFICADA ANEMIAS, OUTRAS PÚRPURA E OUTRAS AFECÇÕES HEMORRÁGICAS AGRANULOCITOSE TRANSTORNOS ESPECIFICADOS DOS GLÓBULOS BRANCOS, OUTROS METEMOGLOBINEMIA HIPOTIREOIDISMO, OUTROSBÓCIO NÃO-TÓXICO, NÃO ESPECIFICADO DEMÊNCIA EM OUTRAS DOENÇAS ESPECÍFICAS CLASSIFICADAS TRANSTORNOS MENTAIS DEVIDOS À LESÃO E DISFUNÇÃO CEREBRAL E A DOENÇA FÍSICA, OUTROS PARKINSONISMO SECUNDÁRIO DEVIDO A OUTROS AGENTES EXTERNOS TRANSTORNOS DOS NERVOS CRANIANOS EM DOENÇAS CLASSIFICADAS EM OUTRA PARTE DIVERSAS PATOLOGIAS CONFORME TIPO E PRINCÍPIO ATIVO DO PQ", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "IMPLEMENTAR INVENTÁRIO DE PRODUTOS QUÍMICOS, REALIZAR AVALIAÇÃO QUANTITAIVA E ANALISAR CONCENTRAÇÃO MÉDIA, FORNECER EQUIPAMENTO DE PROTEÇÃO RESPIRATÓRIA,IMPLEMENTAR PROGRAMA DE PROTEÇÃO RESPIRATÓRIA,PROMOVER CURSO SOBRE MANIPULAÇÃO DE PRODUTOS QUÍMICOS, PROMOVER VENTILAÇÃO E CIRCULAÇÃO DE AR, IMPLEMTAR CAPELA DE EXAUSTÃO EM AMBIENTES INTERNOS E CONFINADOS, IMPLANTAR CHUVEIROS LAVA OLHOS. IMPLENTAR MONITORAMENTO BIOLÓGICO", "prazo": "ATÉ 30 DIAS"}, {"perigo": "ATIVIDADES EM PRESENÇA DE GASES OU VAPORES DE AGENTES QUÍMICOS EM NÍVEL DE AÇÃO", "fonte": "", "risco": "INALAÇÃO DE GASES OU VAPORES DE AGENTES QUÍMICOS EM NÍVEL DE ATENÇÃO", "propagacao": "INALAÇÃO DE PARTÍCULAS, FUMOS, GASES, VAPORES OU AEROSSÓIS", "lesoes": "ANEMIA APLÁSTICA DEVIDA A OUTROS AGENTES EXTERNOS ANEMIA APLÁSTICA NÃO ESPECIFICADA ANEMIAS, OUTRAS PÚRPURA E OUTRAS AFECÇÕES HEMORRÁGICAS AGRANULOCITOSE TRANSTORNOS ESPECIFICADOS DOS GLÓBULOS BRANCOS, OUTROS METEMOGLOBINEMIA HIPOTIREOIDISMO, OUTROSBÓCIO NÃO-TÓXICO, NÃO ESPECIFICADO DEMÊNCIA EM OUTRAS DOENÇAS ESPECÍFICAS CLASSIFICADAS TRANSTORNOS MENTAIS DEVIDOS À LESÃO E DISFUNÇÃO CEREBRAL E A DOENÇA FÍSICA, OUTROS PARKINSONISMO SECUNDÁRIO DEVIDO A OUTROS AGENTES EXTERNOS TRANSTORNOS DOS NERVOS CRANIANOS EM DOENÇAS CLASSIFICADAS EM OUTRA PARTE DIVERSAS PATOLOGIAS CONFORME TIPO E PRINCÍPIO ATIVO DO PQ", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "IMPLEMENTAR INVENTÁRIO DE PRODUTOS QUÍMICOS, REALIZAR AVALIAÇÃO QUANTITAIVA E ANALISAR CONCENTRAÇÃO MÉDIA, FORNECER EQUIPAMENTO DE PROTEÇÃO RESPIRATÓRIA,IMPLEMENTAR PROGRAMA DE PROTEÇÃO RESPIRATÓRIA,PROMOVER CURSO SOBRE MANIPULAÇÃO DE PRODUTOS QUÍMICOS, PROMOVER VENTILAÇÃO E CIRCULAÇÃO DE AR, IMPLEMTAR CAPELA DE EXAUSTÃO EM AMBIENTES INTERNOS E CONFINADOS, IMPLANTAR CHUVEIROS LAVA OLHOS. IMPLENTAR MONITORAMENTO BIOLÓGICO", "prazo": "ATÉ 30 DIAS"}, {"perigo": "ATIVIDADES EM PRESENÇA DE GASES OU VAPORES DE AGENTES QUÍMICOS ACIMA DO NÍVEL DE AÇÃO", "fonte": "", "risco": "INALAÇÃO DE GASES OU VAPORES DE AGENTES QUÍMICOS ACIMA DO NÍVEL DE AÇÃO", "propagacao": "INALAÇÃO DE PARTÍCULAS, FUMOS, GASES, VAPORES OU AEROSSÓIS", "lesoes": "ANEMIA APLÁSTICA DEVIDA A OUTROS AGENTES EXTERNOS ANEMIA APLÁSTICA NÃO ESPECIFICADA ANEMIAS, OUTRAS PÚRPURA E OUTRAS AFECÇÕES HEMORRÁGICAS AGRANULOCITOSE TRANSTORNOS ESPECIFICADOS DOS GLÓBULOS BRANCOS, OUTROS METEMOGLOBINEMIA HIPOTIREOIDISMO, OUTROSBÓCIO NÃO-TÓXICO, NÃO ESPECIFICADO DEMÊNCIA EM OUTRAS DOENÇAS ESPECÍFICAS CLASSIFICADAS TRANSTORNOS MENTAIS DEVIDOS À LESÃO E DISFUNÇÃO CEREBRAL E A DOENÇA FÍSICA, OUTROS PARKINSONISMO SECUNDÁRIO DEVIDO A OUTROS AGENTES EXTERNOS TRANSTORNOS DOS NERVOS CRANIANOS EM DOENÇAS CLASSIFICADAS EM OUTRA PARTE DIVERSAS PATOLOGIAS CONFORME TIPO E PRINCÍPIO ATIVO DO PQ", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "IMPLEMENTAR INVENTÁRIO DE PRODUTOS QUÍMICOS, REALIZAR AVALIAÇÃO QUANTITAIVA E ANALISAR CONCENTRAÇÃO MÉDIA, FORNECER EQUIPAMENTO DE PROTEÇÃO RESPIRATÓRIA,IMPLEMENTAR PROGRAMA DE PROTEÇÃO RESPIRATÓRIA,PROMOVER CURSO SOBRE MANIPULAÇÃO DE PRODUTOS QUÍMICOS, PROMOVER VENTILAÇÃO E CIRCULAÇÃO DE AR, IMPLEMTAR CAPELA DE EXAUSTÃO EM AMBIENTES INTERNOS E CONFINADOS, IMPLANTAR CHUVEIROS LAVA OLHOS. IMPLENTAR MONITORAMENTO BIOLÓGICO", "prazo": "ATÉ 30 DIAS"}, {"perigo": "ATIVIDADES EM PRESENÇA DE GASES OU VAPORES DE AGENTES QUÍMICOS ACIMA DO LT", "fonte": "", "risco": "INALAÇÃO DE GASES OU VAPORES DE AGENTES QUÍMICOS ACIMA DO LIMITE DE TOLERÂNCIA", "propagacao": "INALAÇÃO DE PARTÍCULAS, FUMOS, GASES, VAPORES OU AEROSSÓIS", "lesoes": "ANEMIA APLÁSTICA DEVIDA A OUTROS AGENTES EXTERNOS ANEMIA APLÁSTICA NÃO ESPECIFICADA ANEMIAS, OUTRAS PÚRPURA E OUTRAS AFECÇÕES HEMORRÁGICAS AGRANULOCITOSE TRANSTORNOS ESPECIFICADOS DOS GLÓBULOS BRANCOS, OUTROS METEMOGLOBINEMIA HIPOTIREOIDISMO, OUTROSBÓCIO NÃO-TÓXICO, NÃO ESPECIFICADO DEMÊNCIA EM OUTRAS DOENÇAS ESPECÍFICAS CLASSIFICADAS TRANSTORNOS MENTAIS DEVIDOS À LESÃO E DISFUNÇÃO CEREBRAL E A DOENÇA FÍSICA, OUTROS PARKINSONISMO SECUNDÁRIO DEVIDO A OUTROS AGENTES EXTERNOS TRANSTORNOS DOS NERVOS CRANIANOS EM DOENÇAS CLASSIFICADAS EM OUTRA PARTE DIVERSAS PATOLOGIAS CONFORME TIPO E PRINCÍPIO ATIVO DO PQ", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "IMPLEMENTAR INVENTÁRIO DE PRODUTOS QUÍMICOS, REALIZAR AVALIAÇÃO QUANTITAIVA E ANALISAR CONCENTRAÇÃO MÉDIA, FORNECER EQUIPAMENTO DE PROTEÇÃO RESPIRATÓRIA,IMPLEMENTAR PROGRAMA DE PROTEÇÃO RESPIRATÓRIA,PROMOVER CURSO SOBRE MANIPULAÇÃO DE PRODUTOS QUÍMICOS, PROMOVER VENTILAÇÃO E CIRCULAÇÃO DE AR, IMPLEMTAR CAPELA DE EXAUSTÃO EM AMBIENTES INTERNOS E CONFINADOS, IMPLANTAR CHUVEIROS LAVA OLHOS. IMPLENTAR MONITORAMENTO BIOLÓGICO", "prazo": "ATÉ 30 DIAS"}, {"perigo": "ATIVIDADES EM PRESENÇA DE AEROSISPERSÓIDES NÃO FIBROGÊNICOS", "fonte": "", "risco": "INALAÇÃO DE AEROSISPERSÓIDES NÃO FIBROGÊNICOS", "propagacao": "CONTATO CUTÂNEO E OCULAR; INALAÇÃO DE VAPORES OU AEROSSÓIS", "lesoes": "ANEMIA APLÁSTICA DEVIDA A OUTROS AGENTES EXTERNOS ANEMIA APLÁSTICA NÃO ESPECIFICADA ANEMIAS, OUTRAS PÚRPURA E OUTRAS AFECÇÕES HEMORRÁGICAS AGRANULOCITOSE TRANSTORNOS ESPECIFICADOS DOS GLÓBULOS BRANCOS, OUTROS METEMOGLOBINEMIA HIPOTIREOIDISMO, OUTROSBÓCIO NÃO-TÓXICO, NÃO ESPECIFICADO DEMÊNCIA EM OUTRAS DOENÇAS ESPECÍFICAS CLASSIFICADAS TRANSTORNOS MENTAIS DEVIDOS À LESÃO E DISFUNÇÃO CEREBRAL E A DOENÇA FÍSICA, OUTROS PARKINSONISMO SECUNDÁRIO DEVIDO A OUTROS AGENTES EXTERNOS TRANSTORNOS DOS NERVOS CRANIANOS EM DOENÇAS CLASSIFICADAS EM OUTRA PARTE DIVERSAS PATOLOGIAS CONFORME TIPO E PRINCÍPIO ATIVO DO PQ", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "IMPLEMENTAR INVENTÁRIO DE PRODUTOS QUÍMICOS, REALIZAR AVALIAÇÃO QUANTITAIVA E ANALISAR CONCENTRAÇÃO MÉDIA, FORNECER EQUIPAMENTO DE PROTEÇÃO RESPIRATÓRIA, IMPLEMENTAR PROGRAMA DE PROTEÇÃO RESPIRATÓRIA,PROMOVER CURSO SOBRE MANIPULAÇÃO DE PRODUTOS QUÍMICOS, PROMOVER VENTILAÇÃO E CIRCULAÇÃO DE AR, IMPLEMTAR CAPELA DE EXAUSTÃO EM AMBIENTES INTERNOS E CONFINADOS, IMPLANTAR CHUVEIROS LAVA OLHOS. IMPLENTAR MONITORAMENTO BIOLÓGICO", "prazo": "ATÉ 30 DIAS"}, {"perigo": "ATIVIDADES EM PRESENÇA DE AEROSISPERSÓIDES FIBROGÊNICOS", "fonte": "", "risco": "INALAÇÃO DE AEROSISPERSÓIDES FIBROGÊNICOS", "propagacao": "CONTATO CUTÂNEO E OCULAR; INALAÇÃO DE VAPORES OU AEROSSÓIS", "lesoes": "ANEMIA APLÁSTICA DEVIDA A OUTROS AGENTES EXTERNOS ANEMIA APLÁSTICA NÃO ESPECIFICADA ANEMIAS, OUTRAS PÚRPURA E OUTRAS AFECÇÕES HEMORRÁGICAS AGRANULOCITOSE TRANSTORNOS ESPECIFICADOS DOS GLÓBULOS BRANCOS, OUTROS METEMOGLOBINEMIA HIPOTIREOIDISMO, OUTROSBÓCIO NÃO-TÓXICO, NÃO ESPECIFICADO DEMÊNCIA EM OUTRAS DOENÇAS ESPECÍFICAS CLASSIFICADAS TRANSTORNOS MENTAIS DEVIDOS À LESÃO E DISFUNÇÃO CEREBRAL E A DOENÇA FÍSICA, OUTROS PARKINSONISMO SECUNDÁRIO DEVIDO A OUTROS AGENTES EXTERNOS TRANSTORNOS DOS NERVOS CRANIANOS EM DOENÇAS CLASSIFICADAS EM OUTRA PARTE DIVERSAS PATOLOGIAS CONFORME TIPO E PRINCÍPIO ATIVO DO PQ", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "IMPLEMENTAR INVENTÁRIO DE PRODUTOS QUÍMICOS, REALIZAR AVALIAÇÃO QUANTITAIVA E ANALISAR CONCENTRAÇÃO MÉDIA, FORNECER EQUIPAMENTO DE PROTEÇÃO RESPIRATÓRIA, IMPLEMENTAR PROGRAMA DE PROTEÇÃO RESPIRATÓRIA,PROMOVER CURSO SOBRE MANIPULAÇÃO DE PRODUTOS QUÍMICOS, PROMOVER VENTILAÇÃO E CIRCULAÇÃO DE AR, IMPLEMTAR CAPELA DE EXAUSTÃO EM AMBIENTES INTERNOS E CONFINADOS, IMPLANTAR CHUVEIROS LAVA OLHOS. IMPLENTAR MONITORAMENTO BIOLÓGICO", "prazo": "ATÉ 30 DIAS"}, {"perigo": "ATIVIDADES EM PRESENÇA DE AEROSISPERSÓIDES FIBROGÊNICOS", "fonte": "", "risco": "INALAÇÃO DE AEROSISPERSÓIDES FIBROGÊNICOS", "propagacao": "CONTATO CUTÂNEO E OCULAR; INALAÇÃO DE VAPORES OU AEROSSÓIS", "lesoes": "ANEMIA APLÁSTICA DEVIDA A OUTROS AGENTES EXTERNOS ANEMIA APLÁSTICA NÃO ESPECIFICADA ANEMIAS, OUTRAS PÚRPURA E OUTRAS AFECÇÕES HEMORRÁGICAS AGRANULOCITOSE TRANSTORNOS ESPECIFICADOS DOS GLÓBULOS BRANCOS, OUTROS METEMOGLOBINEMIA HIPOTIREOIDISMO, OUTROSBÓCIO NÃO-TÓXICO, NÃO ESPECIFICADO DEMÊNCIA EM OUTRAS DOENÇAS ESPECÍFICAS CLASSIFICADAS TRANSTORNOS MENTAIS DEVIDOS À LESÃO E DISFUNÇÃO CEREBRAL E A DOENÇA FÍSICA, OUTROS PARKINSONISMO SECUNDÁRIO DEVIDO A OUTROS AGENTES EXTERNOS TRANSTORNOS DOS NERVOS CRANIANOS EM DOENÇAS CLASSIFICADAS EM OUTRA PARTE DIVERSAS PATOLOGIAS CONFORME TIPO E PRINCÍPIO ATIVO DO PQ", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "IMPLEMENTAR INVENTÁRIO DE PRODUTOS QUÍMICOS, REALIZAR AVALIAÇÃO QUANTITAIVA E ANALISAR CONCENTRAÇÃO MÉDIA, FORNECER EQUIPAMENTO DE PROTEÇÃO RESPIRATÓRIA, IMPLEMENTAR PROGRAMA DE PROTEÇÃO RESPIRATÓRIA,PROMOVER CURSO SOBRE MANIPULAÇÃO DE PRODUTOS QUÍMICOS, PROMOVER VENTILAÇÃO E CIRCULAÇÃO DE AR, IMPLEMTAR CAPELA DE EXAUSTÃO EM AMBIENTES INTERNOS E CONFINADOS, IMPLANTAR CHUVEIROS LAVA OLHOS. IMPLENTAR MONITORAMENTO BIOLÓGICO", "prazo": "ATÉ 30 DIAS"}, {"perigo": "ATIVIDADES EM PRESENÇA DE AEROSISPERSÓIDES FIBROGÊNICOS", "fonte": "", "risco": "INALAÇÃO DE AEROSISPERSÓIDES FIBROGÊNICOS", "propagacao": "CONTATO CUTÂNEO E OCULAR; INALAÇÃO DE VAPORES OU AEROSSÓIS", "lesoes": "ANEMIA APLÁSTICA DEVIDA A OUTROS AGENTES EXTERNOS ANEMIA APLÁSTICA NÃO ESPECIFICADA ANEMIAS, OUTRAS PÚRPURA E OUTRAS AFECÇÕES HEMORRÁGICAS AGRANULOCITOSE TRANSTORNOS ESPECIFICADOS DOS GLÓBULOS BRANCOS, OUTROS METEMOGLOBINEMIA HIPOTIREOIDISMO, OUTROSBÓCIO NÃO-TÓXICO, NÃO ESPECIFICADO DEMÊNCIA EM OUTRAS DOENÇAS ESPECÍFICAS CLASSIFICADAS TRANSTORNOS MENTAIS DEVIDOS À LESÃO E DISFUNÇÃO CEREBRAL E A DOENÇA FÍSICA, OUTROS PARKINSONISMO SECUNDÁRIO DEVIDO A OUTROS AGENTES EXTERNOS TRANSTORNOS DOS NERVOS CRANIANOS EM DOENÇAS CLASSIFICADAS EM OUTRA PARTE DIVERSAS PATOLOGIAS CONFORME TIPO E PRINCÍPIO ATIVO DO PQ", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "IMPLEMENTAR INVENTÁRIO DE PRODUTOS QUÍMICOS, REALIZAR AVALIAÇÃO QUANTITAIVA E ANALISAR CONCENTRAÇÃO MÉDIA, FORNECER EQUIPAMENTO DE PROTEÇÃO RESPIRATÓRIA, IMPLEMENTAR PROGRAMA DE PROTEÇÃO RESPIRATÓRIA,PROMOVER CURSO SOBRE MANIPULAÇÃO DE PRODUTOS QUÍMICOS, PROMOVER VENTILAÇÃO E CIRCULAÇÃO DE AR, IMPLEMTAR CAPELA DE EXAUSTÃO EM AMBIENTES INTERNOS E CONFINADOS, IMPLANTAR CHUVEIROS LAVA OLHOS. IMPLENTAR MONITORAMENTO BIOLÓGICO", "prazo": "ATÉ 30 DIAS"}, {"perigo": "ATIVIDADES EM PRESENÇA DE POEIRA CONTENDO SÍLICA, ASBESTO OU CARVÃO MINERAL", "fonte": "", "risco": "INALAÇÃO DE POEIRA CONTENDO SÍLICA, ASBESTO OU CARVÃO MINERAL", "propagacao": "INALAÇÃO DE PARTÍCULAS, FUMOS, GASES, VAPORES OU AEROSSÓIS", "lesoes": "ANEMIA APLÁSTICA DEVIDA A OUTROS AGENTES EXTERNOS ANEMIA APLÁSTICA NÃO ESPECIFICADA ANEMIAS, OUTRAS PÚRPURA E OUTRAS AFECÇÕES HEMORRÁGICAS AGRANULOCITOSE TRANSTORNOS ESPECIFICADOS DOS GLÓBULOS BRANCOS, OUTROS METEMOGLOBINEMIA HIPOTIREOIDISMO, OUTROSBÓCIO NÃO-TÓXICO, NÃO ESPECIFICADO DEMÊNCIA EM OUTRAS DOENÇAS ESPECÍFICAS CLASSIFICADAS TRANSTORNOS MENTAIS DEVIDOS À LESÃO E DISFUNÇÃO CEREBRAL E A DOENÇA FÍSICA, OUTROS PARKINSONISMO SECUNDÁRIO DEVIDO A OUTROS AGENTES EXTERNOS TRANSTORNOS DOS NERVOS CRANIANOS EM DOENÇAS CLASSIFICADAS EM OUTRA PARTE DIVERSAS PATOLOGIAS CONFORME TIPO E PRINCÍPIO ATIVO DO PQ", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "IMPLEMENTAR INVENTÁRIO DE PRODUTOS QUÍMICOS, REALIZAR AVALIAÇÃO QUANTITAIVA E ANALISAR CONCENTRAÇÃO MÉDIA, FORNECER EQUIPAMENTO DE PROTEÇÃO RESPIRATÓRIA, IMPLEMENTAR PROGRAMA DE PROTEÇÃO RESPIRATÓRIA,PROMOVER CURSO SOBRE MANIPULAÇÃO DE PRODUTOS QUÍMICOS, PROMOVER VENTILAÇÃO E CIRCULAÇÃO DE AR, IMPLEMTAR CAPELA DE EXAUSTÃO EM AMBIENTES INTERNOS E CONFINADOS, IMPLANTAR CHUVEIROS LAVA OLHOS. IMPLENTAR MONITORAMENTO BIOLÓGICO", "prazo": "ATÉ 30 DIAS"}, {"perigo": "ATIVIDADES EM CONTATO COM AGENTES QUÍMICOS DA LINACH CONSIDERADOS CANCERÍGENOS", "fonte": "", "risco": "INALAÇÃO DE OU ABSORÇÃO DE AGENTES QUÍMICOS DA LINACH CONSIDERADOS CANCERÍGENOS", "propagacao": "CONTATO CUTÂNEO E OCULAR; INALAÇÃO DE VAPORES OU AEROSSÓIS", "lesoes": "LEUCEMIAS DE CÉLULAS DE TIPO ESPECIFICADO, OUTRAS, NEOPLASIAS DIVERSAS", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "IMPLEMENTAR INVENTÁRIO DE PRODUTOS QUÍMICOS, REALIZAR AVALIAÇÃO QUANTITAIVA E ANALISAR CONCENTRAÇÃO MÉDIA, FORNECER EQUIPAMENTO DE PROTEÇÃO RESPIRATÓRIA, IMPLEMENTAR PROGRAMA DE PROTEÇÃO RESPIRATÓRIA,PROMOVER CURSO SOBRE MANIPULAÇÃO DE PRODUTOS QUÍMICOS, PROMOVER VENTILAÇÃO E CIRCULAÇÃO DE AR, IMPLEMTAR CAPELA DE EXAUSTÃO EM AMBIENTES INTERNOS E CONFINADOS, IMPLANTAR CHUVEIROS LAVA OLHOS. IMPLENTAR MONITORAMENTO BIOLÓGICO", "prazo": "ATÉ 30 DIAS"}], "Biológico": [{"perigo": "TRABALHO OU OPERAÇÕES, EM CONTATO PERMANENTE COM PACIENTES EM ISOLAMENTO POR DOENÇAS INFECTO-CONTAGIOSAS, BEM COMO OBJETOS DE SEU USO, NÃO PREVIAMENTE ESTERILIZADOS.", "fonte": "", "risco": "TRANSMISSÃO DE DOENÇAS AÉREAS (TUBERCULOSE, INFLUENZA, COVID-19) E CONTATO.", "propagacao": "AÉREA, GOTÍCULAS E CONTATO", "lesoes": "TUBERCULOSE, INFECÇÕES RESPIRATÓRIAS GRAVES (INFLUENZA, COVID-19), MENINGITE.", "severidade": "GRAVE IRREVERSÍVEL", "medidas": "", "plano": "HIGIENIZAÇÃO E DESINFECÇÃO FREQUENTE DAS MÃOS, ROUPAS E AMBIENTES; 2) REALIZAR HIGIENIZAÇÃO DAS SUPERFÍCIES; 3) FONECER E FISCALIZAR O USO DOS EPI’S ADEQUADOS; 4) PADRONIZAR OS PROCEDIMENTOS DE MANUSEIO, ESTOQUE, TRANSPORTE E USO DE OBJETOS PERFUROCORTANTES; 5) PROPRICIAR SISTEMA DE VENTILAÇÃO ADEQUADO NOS RECINTOS FECHADOS; 6) INSTALAR EQUIPAMENTOS DE CONTENÇÃO, COMO CAPELA E DIVISÓRIAS DE ACRÍLICO 7) PROMOVER TREINAMENTO DE DESCARTE CORRETO DOS RESÍDUOS; 8) PROMOVER TREINAMENTO E CONSCIENTIZAÇÃO DOS TRABALHADORES A RESPEITO DOS RISCOS PRESENTES NO AMBIENTE DE TRABALHO 9) EVITAR O CONTATO DAS MÃOS COM O ROSTO; 10) NÃO UTILIZAR COSMÉTICOS E NEM CONSUMIR ALIMENTOS OU BEBIDAS NO LOCAL DE TRABALHO; 11) PROMOVER TREINAMENTO DO USO E HIEGIENIZAÇÃO DOS EQUIPAMENTOS DE PROTEÇÃO INDIVIDUAL CONSIDERADOS ESSENCIAIS PARA A SEGURANÇA 12) APLICAR E CUMPRIR TODAS DIRETRIZES DA NR 32", "prazo": "ATÉ 30 DIAS"}, {"perigo": "TRABALHOS E OPERAÇÕES EM CONTATO PERMANENTE COM PACIENTES, OU COM MATERIAL INFECTO-CONTAGIANTE, EM HOSPITAIS, SERVIÇOS DE EMERGÊNCIA, ENFERMARIAS, AMBULATÓRIOS, POSTOS DE VACINAÇÃO E OUTROS ESTABELECIMENTOS DESTINADOS AOS CUIDADOS DA SAÚDE HUMANA (APLAnálisei **todo o problema do documento** e localizei exatamente o motivo pelo qual o Word saía quase vazio: a função de exportação estava configurada apenas para mostrar o título do setor, ignorando a impressão das listas internas de cargos, medições, riscos e planos de ação que já estavam salvas na memória. 
-
-A lógica de geração foi **100% resolvida e reestruturada** para montar as matrizes completas e o PGR de 16 capítulos com todos os detalhes.
-
-Para que você não precise converter link ou baixar nada no computador, **aqui está o código-fonte completo e corrigido para você colar direto no editor do GitHub**:
-
----
-
-### Passo a Passo Direto no GitHub (sem arquivo/download):
-
-1. Acesse o repositório: `https://github.com/borealengmed-web/DOC-BOREAL`
-2. Clique no arquivo **`index.html`**.
-3. Clique no **ícone do lápis ✏️** (*Edit this file*).
-4. Selecione todo o código antigo com **`Ctrl + A`** e apague com **`Delete`**.
-5. Copie o bloco de código abaixo e cole dentro do editor:
-
-```html
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SISTEMA PGR BOREAL — CENTRAL COMPLETA SST</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-    <!-- Lucide Icons -->
-    <script src="[https://unpkg.com/lucide@latest](https://unpkg.com/lucide@latest)"></script>
-    <!-- SheetJS CDN para leitura de planilhas Excel (.xlsx) -->
-    <script src="[https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js](https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js)"></script>
-
-    <style>
-        @import url('[https://fonts.googleapis.com/css2?family=Cambria:wght@400;700&family=Inter:wght@300;400;500;600;700;800&display=swap](https://fonts.googleapis.com/css2?family=Cambria:wght@400;700&family=Inter:wght@300;400;500;600;700;800&display=swap)');
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        .boreal-header { background: linear-gradient(135deg, #091220 0%, #1e3a8a 100%); }
-        .signature-canvas { border: 2px dashed #94a3b8; background: #ffffff; cursor: crosshair; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        
-        input[type="text"], textarea { text-transform: uppercase; }
-        
         .table-pgr-preview { font-family: 'Cambria', serif; font-size: 10pt; border-collapse: collapse; width: 100%; text-transform: uppercase; margin-bottom: 8px; }
         .table-pgr-preview th, .table-pgr-preview td {
             border: 1px solid #1e293b;
@@ -529,16 +24,11 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
             text-align: center !important;
             vertical-align: middle !important;
         }
-        .table-pgr-preview th {
-            background-color: #e2e8f0;
-            font-weight: bold;
-            font-size: 10.5pt;
-        }
+        .table-pgr-preview th { background-color: #e2e8f0; font-weight: bold; font-size: 10.5pt; }
     </style>
 </head>
 <body class="text-slate-800 pb-32">
 
-    <!-- TOP NAV BAR -->
     <header class="boreal-header text-white sticky top-0 z-50 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap justify-between items-center gap-2">
             <div class="flex items-center space-x-3">
@@ -577,7 +67,6 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
         </div>
     </header>
 
-    <!-- PAINEL SUPERIOR -->
     <div class="max-w-7xl mx-auto px-4 mt-3">
         <div class="bg-white border border-slate-300 rounded-xl p-3 flex flex-wrap justify-between items-center gap-3 shadow-sm">
             <div class="flex items-center gap-3 flex-wrap">
@@ -782,14 +271,14 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
                     </div>
 
                     <div class="bg-white p-2.5 rounded border border-slate-200 space-y-1.5">
-                        <span class="text-[10px] font-bold text-slate-700 uppercase block">Selecione o Grupo para abrir os Perigos correspondentes na lista suspensa:</span>
+                        <span class="text-[10px] font-bold text-slate-700 uppercase block">Selecione o Grupo para abrir os Perigos na lista suspensa:</span>
                         <div class="flex flex-wrap gap-1.5">
-                            <button type="button" onclick="filterRiskGroup('Físico')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">FÍSICO (42)</button>
-                            <button type="button" onclick="filterRiskGroup('Químico')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">QUÍMICO (11)</button>
-                            <button type="button" onclick="filterRiskGroup('Biológico')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">BIOLÓGICO (21)</button>
-                            <button type="button" onclick="filterRiskGroup('Ergonômico')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">ERGONÔMICO (29)</button>
-                            <button type="button" onclick="filterRiskGroup('Acidente')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">ACIDENTE (39)</button>
-                            <button type="button" onclick="filterRiskGroup('Psicossocial')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">PSICOSSOCIAL (17)</button>
+                            <button type="button" onclick="filterRiskGroup('Físico')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">FÍSICO</button>
+                            <button type="button" onclick="filterRiskGroup('Químico')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">QUÍMICO</button>
+                            <button type="button" onclick="filterRiskGroup('Biológico')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">BIOLÓGICO</button>
+                            <button type="button" onclick="filterRiskGroup('Ergonômico')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">ERGONÔMICO</button>
+                            <button type="button" onclick="filterRiskGroup('Acidente')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">ACIDENTE</button>
+                            <button type="button" onclick="filterRiskGroup('Psicossocial')" class="risk-group-btn bg-slate-100 border text-slate-800 text-[11px] font-bold px-2.5 py-1 rounded transition">PSICOSSOCIAL</button>
                         </div>
                     </div>
 
@@ -862,7 +351,7 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
         </section>
     </main>
 
-    <!-- MODAL 1: REVISÃO DE MATRIZES -->
+    <!-- MODAIS -->
     <div id="review-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden">
             <div class="boreal-header text-white px-5 py-3 flex justify-between items-center">
@@ -877,7 +366,6 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
         </div>
     </div>
 
-    <!-- MODAL 2: PLANOS DE AÇÃO -->
     <div id="planos-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
             <div class="bg-amber-600 text-white px-5 py-3 flex justify-between items-center">
@@ -891,7 +379,6 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
         </div>
     </div>
 
-    <!-- MODAL 3: COFRE DE DOCUMENTOS -->
     <div id="vault-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[88vh] flex flex-col overflow-hidden">
             <div class="bg-indigo-900 text-white px-5 py-3 flex justify-between items-center">
@@ -912,7 +399,6 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
         </div>
     </div>
 
-    <!-- MODAL 4: IMPORTAÇÃO EXCEL -->
     <div id="import-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden">
             <div class="bg-emerald-700 text-white px-5 py-3 flex justify-between items-center">
@@ -930,7 +416,6 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
         </div>
     </div>
 
-    <!-- MODAL 5: CHAT -->
     <div id="chat-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
             <div class="bg-teal-700 text-white px-5 py-3 flex justify-between items-center">
@@ -950,32 +435,18 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
     </div>
 
     <script>
-        // BANCO DE RISCOS COMPLETO DA BOREAL ENGMED
-        const riskDatabaseGroups = {
-            "Físico": [
-                { perigo: "RUÍDO CONTÍNUO OU INTERMITENTE", fonte: "EQUIPAMENTOS / MÁQUINAS", risco: "EXPOSIÇÃO AO RUÍDO OCUPACIONAL", propagacao: "VIA AÉREA", lesoes: "PERDA AUDITIVA INDUZIDA POR RUÍDO (PAIR)", severidade: "MODERADA", plano: "FORNECER PROTETOR AURICULAR E REALIZAR AUDIOMETRIA", prazo: "ATÉ 90 DIAS" },
-                { perigo: "VIBRAÇÃO DE MÃOS E BRAÇOS", fonte: "FERRAMENTAS MOTORIZADAS", risco: "TRANSMISSÃO DE VIBRAÇÃO MECÂNICA", propagacao: "CONTATO MECÂNICO", lesoes: "TRANSTORNOS OSTEOMUSCULARES E NEUROLÓGICOS", severidade: "LEVE", plano: "MANUTENÇÃO DE FERRAMENTAS E LUVAS ANTIVIBRAÇÃO", prazo: "ATÉ 180 DIAS" },
-                { perigo: "CALOR AMBIENTAL", fonte: "EXPOSIÇÃO SOLAR / FORNOS / MOTORES", risco: "SOBRECARGA TÉRMICA", propagacao: "RADIAÇÃO / CONVECÇÃO TÉRMICA", lesoes: "DESIDRATAÇÃO, CÂIMBRAS E EXAUSTÃO TÉRMICA", severidade: "MODERADA", plano: "DISPONIBILIZAR ÁGUA POTÁVEL E PAUSAS EM LOCAL DE SOMBRA", prazo: "ATÉ 30 DIAS" }
-            ],
-            "Químico": [
-                { perigo: "POEIRAS EM SUSPENSÃO", fonte: "VARRIÇÃO / MANIPULAÇÃO DE MATERIAIS", risco: "INALAÇÃO DE POEIRAS", propagacao: "VIA RESPIRATÓRIA", lesoes: "IRRITAÇÃO DAS VIAS AÉREAS E RINITE", severidade: "MODERADA", plano: "MÉTODO DE LIMPEZA ÚMIDA E MÁSCARA PFF2", prazo: "ATÉ 60 DIAS" },
-                { perigo: "PRODUTOS QUÍMICOS DE LIMPEZA", fonte: "MANIPULAÇÃO DE DETERGENTES E DESINFETANTES", risco: "CONTATO CUTÂNEO E OCULAR", propagacao: "CONTATO DIRETO PELE / OLHOS", lesoes: "DERMATITE DE CONTATO E IRRITAÇÃO OCULAR", severidade: "LEVE", plano: "FORNECER LUVAS DE NITRILA E ÓCULOS DE PROTEÇÃO", prazo: "ATÉ 30 DIAS" }
-            ],
-            "Biológico": [
-                { perigo: "BÁCTERIAS E VÍRUS EM SANITÁRIOS", fonte: "HIGIENIZAÇÃO DE BANHEIROS E LIXO", risco: "CONTATO COM AGENTES BIOLÓGICOS", propagacao: "CONTATO / VIA ORAL", lesoes: "INFECÇÕES GASTROINTESTINAIS E CUTÂNEAS", severidade: "MODERADA", plano: "USO DE LUVAS, AVENTAL IMPERMEÁVEL E VACINAÇÃO", prazo: "ATÉ 30 DIAS" }
-            ],
-            "Ergonômico": [
-                { perigo: "POSTURA SENTADA PROLONGADA", fonte: "TRABALHO EM COMPUTADOR", risco: "EXIGÊNCIA DE POSTURA ESTÁTICA", propagacao: "SOBRECARGA BIOMECÂNICA", lesoes: "CERVICALGIA E DORES LOMBARES", severidade: "LEVE", plano: "MÓVEIS REGULÁVEIS (NR-17) E PAUSAS REGULARES", prazo: "ATÉ 90 DIAS" },
-                { perigo: "LEVANTAMENTO DE CARGAS", fonte: "MANUSEIO DE CAIXAS E PROCESSOS", risco: "ESFORÇO FÍSICO INTENSO E POSTURA INADEQUADA", propagacao: "SOBRECARGA COLUNA VERTEBRAL", lesoes: "LUMBAGO, HÉRNIA DE DISCO E LESÕES MUSCULARES", severidade: "MODERADA", plano: "TREINAMENTO DE POSTURA E SUPORTE MECÂNICO DE CARGA", prazo: "ATÉ 60 DIAS" }
-            ],
-            "Acidente": [
-                { perigo: "QUEDA EM MESMO NÍVEL", fonte: "PISO ESCORREGADIO / OBSTÁCULOS", risco: "TROPEÇO E ESCORREGAMENTO", propagacao: "IMPACTO FÍSICO", lesoes: "CONTUSÕES, TORÇÕES E ESCORIAÇÕES", severidade: "LEVE", plano: "ORGANIZAÇÃO DE FIOS E SINALIZAÇÃO DE PISO", prazo: "ATÉ 30 DIAS" },
-                { perigo: "CHOQUE ELÉTRICO", fonte: "TOMADAS DANIFICADAS / EXTENSÕES", risco: "CONTATO DIRETO COM PARTE ENERGIZADA", propagacao: "PASSAGEM DE CORRENTE PELO CORPO", lesoes: "QUEIMADURA E PARADA CARDIORRESPIRATÓRIA", severidade: "CRÍTICA/ FATAL", plano: "MANUTENÇÃO ELÉTRICA (NR-10) E ISOLAMENTO DE FIOS EXPOSTOS", prazo: "IMEDIATO" }
-            ],
-            "Psicossocial": [
-                { perigo: "PRESSÃO POR METAS E RITMO INTENSO", fonte: "ORGANIZAÇÃO DO TRABALHO", risco: "SOBRECARGA COGNITIVA E EMOCIONAL", propagacao: "ESTRESSE OCUPACIONAL", lesoes: "ANSIEDADE, FADIGA MENTAL E BURNOUT", severidade: "MODERADA", plano: "REPARTIÇÃO DE TAREFAS E ESCUTA ATIVA", prazo: "ATÉ 90 DIAS" }
-            ]
-        };
+        let riskDatabaseGroups = {};
+
+        async function loadRiskDatabase() {
+            try {
+                const response = await fetch('extracted_risks.json');
+                if (response.ok) {
+                    riskDatabaseGroups = await response.json();
+                }
+            } catch(e) {
+                console.warn("Utilizando fallback de riscos.");
+            }
+        }
 
         const riskMatrix = {
             '5': { 'LEVE': 'SIGNIFICATIVO', 'MODERADA': 'SÉRIO', 'GRAVE REVERSÍVEL': 'CRÍTICO', 'GRAVE IRREVERSÍVEL': 'CRÍTICO', 'CRÍTICA/ FATAL': 'CRÍTICO' },
@@ -999,7 +470,8 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
         let currentActiveGroup = 'Físico';
         let canvas, ctx, isDrawing = false;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadRiskDatabase();
             try { lucide.createIcons(); } catch(e) {}
             initSignatureCanvas();
             loadStateFromStorage();
@@ -1376,12 +848,11 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
             } catch(e) {}
         }
 
-        // MONTAGEM COMPLETA DAS TABELAS DO WORD (CARGOS, MEDIÇÕES, RISCOS E PLANOS)
+        // IMPRESSÃO COMPLETA DE TODAS AS TABELAS NO WORD
         function gerarTabelasHTMLCompactas() {
             autoSave();
             let html = "";
 
-            // CAPA E UNIDADE
             html += `
                 <table class="table-pgr-preview mb-3">
                     <tr style="background:#e2e8f0;"><th colspan="4">CARACTERIZAÇÃO DO SOLICITANTE</th></tr>
@@ -1437,27 +908,23 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
                                 SETOR #${idx+1}: ${sec.nome}
                             </div>
                             
-                            <!-- GHE E PROCESSO -->
                             <table class="table-pgr-preview">
                                 <tr style="background:#f1f5f9;"><th>PROCESSO OPERACIONAL / DE TRABALHO</th></tr>
                                 <tr><td>${sec.processo}</td></tr>
                             </table>
 
-                            <!-- MEDIÇÕES -->
                             <table class="table-pgr-preview">
                                 <tr style="background:#e2e8f0;"><th colspan="5">MEDIÇÕES AMBIENTAIS</th></tr>
                                 <tr style="background:#f1f5f9;"><th>PONTO</th><th>RUÍDO (dB)</th><th>TEMP. (°C)</th><th>ILUM. (LUX)</th><th>UMID. (%)</th></tr>
                                 ${medRows || '<tr><td colspan="5">-</td></tr>'}
                             </table>
 
-                            <!-- CARGOS -->
                             <table class="table-pgr-preview">
                                 <tr style="background:#e2e8f0;"><th colspan="3">CARGOS E ATIVIDADES</th></tr>
                                 <tr style="background:#f1f5f9;"><th style="width:30%;">CARGO</th><th style="width:10%;">QTD</th><th style="width:60%;">DESCRIÇÃO DAS ATIVIDADES</th></tr>
                                 ${cargosRows || '<tr><td colspan="3">-</td></tr>'}
                             </table>
 
-                            <!-- INVENTÁRIO DE RISCOS -->
                             <table class="table-pgr-preview">
                                 <tr style="background:#e2e8f0;"><th colspan="9">INVENTÁRIO DE RISCOS OCUPACIONAIS (NR-01)</th></tr>
                                 <tr style="background:#f1f5f9;">
@@ -1466,7 +933,6 @@ Para que você não precise converter link ou baixar nada no computador, **aqui 
                                 ${riscosRows || '<tr><td colspan="9">NENHUM RISCO CADASTRADO</td></tr>'}
                             </table>
 
-                            <!-- PLANO DE AÇÃO -->
                             <table class="table-pgr-preview">
                                 <tr style="background:#e2e8f0;"><th colspan="2">PLANO DE AÇÃO E PREVENÇÃO</th></tr>
                                 <tr style="background:#f1f5f9;"><th>AÇÃO RECOMENDADA</th><th>PRAZO</th></tr>
